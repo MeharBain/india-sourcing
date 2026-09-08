@@ -1,0 +1,280 @@
+# Source registry. Verified 2026-09-01 by web research, NOT yet by hand-download.
+# Phase 0 task: hand-download one artifact per GREEN source and confirm it parses.
+# Do not write a connector for any source still marked verified: false.
+
+sources:
+
+  # ---------------------------------------------------------------- GREEN
+  # Centrally published, parseable, permissively licensed. Build these first.
+
+  - key: birac_big
+    name: BIRAC Biotechnology Ignition Grant awardees
+    tier: 1
+    status: green
+    verified: false
+    base_url: https://birac.nic.in/
+    listing_pattern: "birac.nic.in/desc_new.php?id=<n>  (per-cohort landing pages)"
+    artifact_format: pdf
+    confirmed_cohorts: [BIG-16, BIG-17, BIG-18, BIG-21, BIG-22, BIG-23, BIG-24]
+    latest_seen: BIG-24 (published approx Oct 2025)
+    cadence: per_call  # roughly 1-2 cohorts per year, not on a fixed calendar
+    licence: GODL-India (assumed, confirm on site footer)
+    fields_available:
+      - proposal_reference_number   # e.g. BIRAC/CCAMP02283/BIG-24/24
+      - applicant_name              # company OR individual person
+      - category                    # Medical Devices, Diagnostics, Agriculture, etc.
+      - final_score                 # present in some cohorts only (BIG-18, 21, 23)
+    notes: |
+      HIGH VALUE. Two properties make this the best source in the system:
+
+      1. The proposal reference number encodes the PARTNER INCUBATOR.
+         CCAMP = C-CAMP Bangalore, FITT = IIT Delhi, SINE = IIT Bombay,
+         IKP = IKP Knowledge Park Hyderabad, VENTURE = Venture Center Pune,
+         SIIC = IIT Kanpur, KIIT = KIIT-TBI Bhubaneswar, NAARM = NAARM Hyderabad.
+         So one PDF yields grant + incubator affiliation + cohort date + sector.
+         Maintain the prefix->incubator map in config; it is worth more than a
+         separate incubator connector.
+
+      2. A large minority of awardees are listed as INDIVIDUAL PERSONS, not
+         companies ("Mr. Davinder Siwal", "Ms. Devhuti Palan", "Mr. Samir K. Maji").
+         These are pre-incorporation. See PRD section 6 on Person as a first-class
+         entity. This is the earliest detectable signal in the entire system.
+
+         MEASURED on BIG-24 (fetched 2026-09-01, full list of 51 awardees):
+         approximately 18 of 51, so ~35% not ~50%. Earlier estimate was inflated by
+         search-snippet sampling bias. Recount per cohort rather than assuming.
+
+         Person awardees include established academics, not only students. Example:
+         Mr. Samir K. Maji via SINE (IIT Bombay) in BIG-24. That strengthens the
+         spinout-detection thesis - watch professor-name awardees especially.
+
+      PDF layout varies between cohorts (score column present or absent, category
+      headings differ). One golden fixture PER COHORT, not per source.
+
+      VERIFIED PARSER HAZARDS (BIG-24, fetched 2026-09-01):
+        - company names wrap across lines mid-name
+        - serial-number placement changes mid-table (own line, then inline)
+        - "S. No." vs "S.No."; hyphen vs en dash in "Category -"
+        - five applicant classes: Pvt Ltd, LLP, OPC, person, ambiguous bare name
+        - awardee lists are PROVISIONAL, footnoted subject to due diligence and
+          budget availability. Announced != funded. Flag and discount in scoring.
+      See CODEX_KICKOFF.md prompt 5 for the full list.
+      Download URLs are unix-timestamp prefixed and not guessable
+      (webcontent/1759752792_big_24_awardees.pdf) - must scrape the listing page.
+
+  - key: mca_company_master
+    name: MCA Company Master Data (bulk)
+    tier: 0
+    status: green
+    verified: false
+    urls:
+      - https://www.mcacdm.nic.in/company-master-details   # filterable export
+      - https://data.gov.in/                               # OGD catalog, ZIP bulk
+    artifact_format: csv_in_zip
+    cadence: unclear  # see WARNING
+    licence: GODL-India (OGD platform)
+    fields_available:
+      - cin
+      - company_name
+      - company_status
+      - company_class
+      - company_category
+      - authorized_capital
+      - paid_up_capital
+      - date_of_registration
+      - registered_state
+      - registrar_of_companies
+      - principal_business_activity
+      - registered_office_address
+      - sub_category
+    fields_NOT_available:
+      - directors          # CRITICAL GAP - see mca_director_lookup below
+      - din
+      - email
+    notes: |
+      WARNING ON FRESHNESS: the CDM portal snapshot read "as on 30th June 2025"
+      when checked on 2026-09-01. If that is the genuine latest bulk snapshot, the
+      bulk file is over a year stale and CANNOT be used to detect new
+      incorporations. Check data.gov.in for a fresher release before designing
+      around it. This is the single most important Phase 0 verification.
+
+      Export is filterable by state and by industrial classification, which lets
+      you pull only relevant sectors rather than all ~2.5M companies.
+
+  - key: patent_office_journal
+    name: Official Journal of the Patent Office (India)
+    tier: 2
+    status: green
+    verified: false
+    artifact_format: pdf   # large, weekly
+    cadence: weekly_friday
+    licence: government publication under Patents Act s.145
+    fields_available:
+      - application_number
+      - filing_date
+      - publication_date
+      - title
+      - ipc_classification
+      - applicant_name_and_address
+      - inventor_names
+      - priority_details
+      - abstract
+      - claims_count
+    notes: |
+      Richest structured Indian patent feed available for free, and the freshest.
+      Applications appear under s.11A, 18 months after filing or priority date.
+
+      IMPORTANT REFRAME: the 18-month statutory lag means patents are NOT an early
+      detection signal. You see a filing a year and a half after it happened. Treat
+      patents as a DEPTH and CREDIBILITY signal on companies found elsewhere, not
+      as a way to find companies first. PRD scoring reflects this.
+
+      Also carries: First Examination Reports, post-grant publications, restorations,
+      non-working patents list. FER issuance is a useful "applicant is actively
+      prosecuting" signal.
+
+      Large weekly PDFs. Budget real effort on the parser. Consider extracting only
+      records where the applicant is a private limited company, to cut volume early.
+
+  - key: google_patents_bigquery
+    name: Google Patents Public Datasets on BigQuery
+    tier: 2
+    status: green
+    verified: false
+    access: SQL via BigQuery
+    cost: 1 TB/month free tier, then ~$5/TB
+    cadence: continuous
+    notes: |
+      The practical route for structured patent analysis, including PCT and family
+      data. Covers 17+ jurisdictions, 166M+ publications.
+      OPEN QUESTION: quality of IN assignee-name normalisation. Verify by querying
+      for a known Indian startup assignee and checking the record is complete.
+      Use `patentsview` tables over full-text `claims_localized` to control cost.
+
+  # ---------------------------------------------------------------- AMBER
+  # Real but harder than the PRD assumed. Do not schedule as quick wins.
+
+  - key: dst_nidhi_prayas
+    name: DST NIDHI-PRAYAS grantees
+    tier: 1
+    status: amber
+    verified: false
+    urls:
+      - https://nidhi.dst.gov.in/
+      - https://nidhi-prayas.org/
+    notes: |
+      DOWNGRADED FROM TIER 1 QUICK WIN. There is no central grantee list.
+
+      What exists centrally is only curated marketing compendiums
+      ("75 Promising Startups under NIDHI PRAYAS", "50 Impactful Women-Led
+      Startups"). These are selected highlights, not complete cohort lists.
+
+      Actual PRAYAS awardees are selected and disbursed by each PRAYAS Centre
+      (a host incubator). Complete coverage therefore requires a fan-out across
+      roughly 100 incubator websites, each with its own format. That is a Phase 3+
+      project, not a week-one connector.
+
+      Programme is now NIDHI-PRAYAS 2.0, split into PRAYAS Centres (PC) and
+      Advance PRAYAS Centres (APC). PMU is SINE, IIT Bombay.
+      Grant band Rs 10L-25L and Rs 25L-50L, 15-18 month duration.
+      Eligible applicants include individuals, so same person-not-company issue
+      as BIRAC BIG.
+
+  - key: nidhi_tbi_list
+    name: NIDHI list of Technology Business Incubators
+    tier: 1
+    status: amber
+    verified: false
+    url: https://nidhi.dst.gov.in/   # "List of Technology Business Incubators (TBIs)"
+    notes: |
+      META-SOURCE. Not a signal source itself. This is the seed list that makes the
+      DST fan-out tractable: it enumerates which incubators to scrape.
+      Build this connector BEFORE any individual incubator connector.
+
+  - key: idex
+    name: iDEX / DISC / ADITI defence challenge winners
+    tier: 1
+    status: amber
+    verified: false
+    url: https://idex.gov.in/
+    notes: |
+      Site is live and actively maintained (DISC-14 and ADITI 4.0 launched at the
+      National Defence Industries Conclave 2026). There is an "iDEX Products" page
+      and a bulletin feed.
+      No clean machine-readable winners list located. Winners appear to be announced
+      via bulletins, press releases and event coverage. Needs manual site inspection
+      in Phase 0 to determine whether a listing page exists.
+      Scale: ~619 startups/MSMEs registered, ~430-650 contracts signed as of 2025.
+      Grant bands: SPARK up to Rs 1.5cr (DISC), ADITI up to Rs 25cr.
+      High signal per row if a list can be obtained.
+
+  - key: mca_director_lookup
+    name: MCA director / DIN master data
+    tier: 0
+    status: amber
+    verified: false
+    access: |
+      Not in bulk. Three routes:
+      1. MCA V3 portal, "View DIN Master Data" - free, per-lookup, supports search by
+         DIN or by DIRECTOR NAME, returns current status and full directorship
+         network (all current and past companies). Enforces session timeouts and a
+         single-session policy, so automated access is fragile.
+      2. Paid third-party APIs (Tofler, Attestr, Scriza, Apify actors). Per-record
+         pricing. Return directors with DIN, appointment date, status, and the
+         directorship network.
+      3. Per-company MCA lookup, which includes the signatory list.
+    notes: |
+      THIS IS THE KEYSTONE FOR THE HIGHEST-VALUE SIGNAL and it is not free in bulk.
+
+      The signal: a BIRAC BIG or PRAYAS awardee listed as an individual person, who
+      later appears as a director of a newly incorporated private limited company.
+      That is true pre-incorporation detection.
+
+      Name-based DIN lookup returning the full directorship network is exactly the
+      reverse-lookup this requires.
+
+      DESIGN PATTERN: cheap free bulk spine (mca_company_master CSV) plus expensive
+      TARGETED enrichment (paid director API) called only on entities already above
+      a score threshold or on the individual-awardee watchlist. Never enrich the
+      whole graph. Put a hard monthly call budget in config.
+
+      Note: DINs deactivated for missed DIR-3 KYC do not appear in public search.
+
+  # ---------------------------------------------------------------- RED
+  # Do not build on these. Documented so nobody tries.
+
+  - key: inpass
+    name: InPASS (Indian Patent Advanced Search System)
+    status: red
+    verified: true
+    notes: |
+      DO NOT BUILD ON THIS. No API. No bulk export of search results. Results
+      capped at approximately 1000 per query. Interactive portal only.
+      Use patent_office_journal and google_patents_bigquery instead.
+      InPASS remains useful for MANUAL one-off verification of a specific filing.
+
+  - key: dpiit_recognised
+    name: DPIIT recognised startups (Startup India)
+    status: red
+    verified: true
+    notes: |
+      data.gov.in publishes only AGGREGATE COUNTS by year, state and sector. The
+      entity-level list is not available as open data; it is only browsable through
+      the startupindia.gov.in search UI
+      (/content/sih/en/search.html?roles=Startup&page=0 - worth checking whether a
+      JSON endpoint backs that pagination, but low priority).
+
+      Scale confirms the noise problem regardless: 197,692 recognised entities as of
+      31 Oct 2025, of which 6,385 already struck off. Recognition carries almost no
+      information about fundability.
+
+      Keep as a per-company ATTRIBUTE if it arrives free via enrichment. Never a
+      promotion reason. Do not build a dedicated connector.
+
+# ---------------------------------------------------------------- UNVERIFIED
+# In the PRD but not yet researched. Audit before scheduling.
+#   birac_seed_leap, dst_nidhi_sss, tdb, technology_innovation_hubs,
+#   wipo_patentscope_pct, ip_india_trademarks, epfo_establishment,
+#   state_schemes (elevate_karnataka, ksum_kerala, tsic_telangana),
+#   arxiv_affiliation_change, crtsh_certificate_transparency,
+#   accelerator_cohorts (100x, antler, axilor)
