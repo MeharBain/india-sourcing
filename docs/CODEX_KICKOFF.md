@@ -99,9 +99,19 @@ session. Then work through these in order. Do not reorder. Do not parallelise un
 >
 > Write no business logic. No parsers, no models, no scoring. Structure only.
 >
-> Then create `docs/DECISIONS.md` with one entry per architectural decision already fixed in
-> the PRD: append-only signals, immutable raw docs, dual Person/Company spine, tenant_id from
-> migration one, connectors never touching the database.
+> Then populate `docs/DECISIONS.md`, which is currently an empty placeholder. Write one entry
+> per architectural decision already fixed, each stating the decision, the reason, and what
+> would have to change to reverse it.
+>
+> Source them from two places and do not miss any: PRD.md section 6 and the "Key design
+> decisions" note beneath it, plus every "Decisions promoted to docs/DECISIONS.md" block in
+> PROGRESS.md. As of now that set includes: append-only signals; immutable raw docs; dual
+> Person/Company spine; tenant_id on tenant-scoped tables only; connectors never touching the
+> database or setting company_id; patents as a depth signal rather than a detection signal due
+> to the 18-month s.11A lag; the LLM cache key being
+> (content_hash, extractor_version, prompt_version); L3 Enrich being a distinct budget-gated
+> layer that must not be collapsed; grant awardee lists being provisional; and applicant type
+> resolving to five classes rather than two.
 
 Review this yourself. Fix the layout now, while it costs nothing.
 
