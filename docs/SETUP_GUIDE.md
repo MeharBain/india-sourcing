@@ -38,7 +38,7 @@ There are several (CLI, desktop app, IDE extension, cloud tasks, Chrome extensio
 project:
 
 - **CLI is your primary tool.** It can run your tests, which is the entire point. A surface
-  that can't run `make test` can't verify its own parser.
+  that can't run `uv run pytest` can't verify its own parser.
 - **Desktop app is worth having alongside** if you aren't comfortable reading diffs in a
   terminal. It gives visual diff review, which is where most of your actual work happens.
 - **Ignore cloud tasks and the IDE extension for now.** More surfaces means more places to
@@ -223,7 +223,7 @@ This is the part people skip, and it's what determines whether the project works
 `test_parser.py` asserts that BIG-24 yields 51 rows across four categories, and it passes, you
 have learned something real. You do not need to understand the PDF-parsing code to know that.
 
-**Run the thing.** `make test` is necessary but not sufficient. Actually run the connector
+**Run the thing.** `uv run pytest` is necessary but not sufficient. Actually run the connector
 against the real PDF and read twenty output rows with your own eyes. Tests confirm the code
 does what the test says. Only looking at output confirms the test says the right thing.
 

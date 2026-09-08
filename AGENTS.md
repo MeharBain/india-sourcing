@@ -161,7 +161,14 @@ Violating these requires a `docs/DECISIONS.md` entry and explicit approval.
 
 ## Testing
 
-- `pytest`. Run `make test` before proposing any change as complete.
+- **Canonical test command is `uv run pytest`.** This project is developed on Windows, where
+  `make` is not available. A `Makefile` exists for CI and macOS convenience only; never assume
+  `make` is installed and never report a task complete on the basis that `make test` could not
+  be run. If `uv run pytest` fails to execute at all, stop and report it as a blocker rather
+  than proceeding with unverified code.
+- Run `uv run pytest` before proposing any change as complete. Other useful commands:
+  `uv sync` to install dependencies, `uv run ruff check .` to lint, `uv add <pkg>` to add a
+  dependency.
 - Every connector needs: a parser golden test, a `discover()` test with a mocked fetch, and
   a schema-conformance test asserting all returned signals validate.
 - Contract tests in `tests/test_contracts.py` run against every registered connector
@@ -201,9 +208,29 @@ Do not:
 5. Write `test_parser.py` and confirm it fails.
 6. Implement `parse()` until the test passes.
 7. Implement `discover()`.
-8. Run `make test`. The contract tests will pick up the new connector automatically.
+8. Run `uv run pytest`. The contract tests will pick up the new connector automatically.
 9. Add a one-paragraph README in the connector directory: what the source is, where the
    list lives, what breaks when they redesign the page.
+
+---
+
+## Environment
+
+Fixed facts about this machine and project. Do not deviate or "helpfully" upgrade these.
+
+- **OS:** Windows. `make` is not installed and winget is unavailable. Do not suggest either.
+- **Python: 3.12, pinned** via `.python-version`. Do not bump it. It is pinned because newer
+  releases lack prebuilt wheels for parts of the PDF and database stack, and a compile failure
+  is indistinguishable from a code bug to this project's author.
+- **Package manager: uv.** Use `uv add <pkg>` to add dependencies, never bare `pip install`.
+  `uv sync` to install, `uv run <cmd>` to execute anything in the environment.
+- **Database:** hosted Postgres on Neon. The connection string lives in `.env` as
+  `DATABASE_URL` and is gitignored. **Never print, log, echo, or commit its value.** Read it
+  via environment variable only. If `.env` is missing, say so and stop; do not invent a
+  connection string or silently fall back to SQLite.
+- **Postgres-specific types are intentional.** `jsonb` columns are deliberate. Do not
+  substitute generic JSON or add SQLite compatibility shims — divergence between dev and
+  production schemas is worse than a single-target schema.
 
 ---
 

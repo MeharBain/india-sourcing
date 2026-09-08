@@ -95,7 +95,8 @@ session. Then work through these in order. Do not reorder. Do not parallelise un
 > Create the repository skeleton described in the AGENTS.md "Repository layout" section.
 > Directories, `__init__.py` files, empty modules with docstrings stating each module's
 > responsibility, a `pyproject.toml` using uv, a `Makefile` with `test`, `lint` and `run`
-> targets, a `conftest.py` that blocks all network access during tests, and a `.gitignore`.
+> targets (for CI and macOS only — `uv run pytest` is the canonical command on Windows),
+> a `conftest.py` that blocks all network access during tests, and a `.gitignore`.
 >
 > Write no business logic. No parsers, no models, no scoring. Structure only.
 >
