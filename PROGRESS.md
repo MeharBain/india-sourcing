@@ -34,6 +34,9 @@ web-capable agent. Codex is not involved until Day 6.
    Indian startup assignee.
 4. Does the `startupindia.gov.in` search pagination have a JSON endpoint behind it? Low
    priority.
+5. Trigger behavior is currently verified only by manual Neon runs because `pytest-socket`
+   blocks database access. Add a separate integration test suite, excluded from the default
+   test run, when CI is set up.
 
 ## Assumptions not yet validated
 

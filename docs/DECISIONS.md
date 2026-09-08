@@ -140,3 +140,21 @@ markers. A binary classifier would create false canonical entities and contamina
 
 **To reverse:** Sources must provide authoritative entity types and identifiers for every
 applicant, or a validated classifier must eliminate ambiguity without reducing accuracy.
+
+## ADR-013: Signal facts are immutable while resolution remains mutable
+
+**Decision:** Enforce `raw_doc` immutability and `signal` append-only behavior with database
+triggers. Every signal fact and provenance column is immutable after insertion, and signal
+rows cannot be deleted. `signal.company_id` is the single permitted signal mutation and is
+owned exclusively by `resolve/`, which may assign or revise the canonical company link without
+rewriting the sourced fact.
+
+**Reason:** A blanket signal update prohibition would prevent entity resolution even though
+the unresolved signal must exist before its company is known. Restricting mutation to the
+resolution-owned foreign key preserves auditable source facts while keeping re-resolution
+possible.
+
+**To reverse:** Replace `signal.company_id` mutation with a separately versioned resolution
+association or another auditable identity-assignment mechanism, migrate existing assignments
+without losing their history, and update the Resolve boundary before tightening the trigger to
+reject every signal update.
