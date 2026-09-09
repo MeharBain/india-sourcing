@@ -90,9 +90,19 @@ Hard rules:
    orchestrator persists them. A connector that imports a session object is wrong.
 3. **Connectors never set `company_id`.** Entity resolution owns that. A connector that
    guesses which company a signal belongs to is wrong.
-4. **Every `Signal` carries provenance.** `raw_doc_id`, `source_id`, `event_date`,
-   `extractor_version`, `confidence`. There is a CI test that fails the build if any signal
-   is missing these. Do not work around it.
+4. **Every `Signal` carries provenance.** Directly, as columns: `raw_doc_id`, `source_id`,
+   `event_date`, `extractor_version`, `confidence`. There is a CI test that fails the build if
+   any signal is missing these. Do not work around it.
+
+   **Source URL and retrieval time are NOT signal fields.** They live on `raw_doc` as `url`
+   and `fetched_at`, and are reached through `signal.raw_doc_id`. Do not duplicate them onto
+   the signal, and specifically do not stash them inside `payload` under a reserved key. A
+   copy can drift from the authoritative row, cannot be constrained `NOT NULL`, and is not
+   properly indexable. The provenance requirement is that provenance be *reachable and
+   non-null*, not that every field be physically present on the signal row.
+
+   `payload` holds source-specific extracted content only. It is not a place for
+   infrastructure metadata, and no key in it may begin with an underscore.
 5. **Fail loudly per-source, never globally.** A broken connector must not stop the run.
    Catch at the orchestrator boundary, record the failure in `source.health_status`, continue.
 6. **Rate limit.** One request per two seconds per domain, via the shared fetch helper. Do

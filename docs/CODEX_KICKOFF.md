@@ -149,8 +149,11 @@ Review this yourself. Fix the layout now, while it costs nothing.
 > any provenance field is missing.
 >
 > Add `tests/test_contracts.py` with a test that iterates every registered connector and fails
-> the build if any returned signal lacks source_url, retrieved_at, raw_doc_id or
-> extractor_version. It should pass trivially now with zero connectors registered.
+> the build if any returned signal lacks `raw_doc_id`, `source_id`, `event_date`,
+> `extractor_version` or `confidence`, **or** if its `raw_doc_id` does not resolve to a
+> `raw_doc` row carrying a non-null `url` and `fetched_at`. Provenance must be reachable
+> through the foreign key, never duplicated onto the signal or stashed in `payload`. It should
+> pass trivially now with zero connectors registered.
 
 This is the module everything else depends on. Read it line by line before moving on.
 

@@ -28,6 +28,7 @@ dist/
 *.egg-info/
 
 # Local databases, logs, and temporary files
+data/raw_docs/
 *.db
 *.sqlite
 *.sqlite3
