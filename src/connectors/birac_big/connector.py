@@ -16,6 +16,7 @@ from src.core.models import RawDoc, Signal
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_SOURCES_CONFIG = PROJECT_ROOT / "config" / "sources.yaml"
+DEFAULT_SCORING_CONFIG = PROJECT_ROOT / "config" / "scoring.yaml"
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 FIXTURE_BY_URL = {
     "https://birac.nic.in/webcontent/1676014626_Final_list_of_BIG_21_Awardees.pdf": (
@@ -31,8 +32,34 @@ class BiracBigConnector(Connector):
     key = "birac_big"
     cadence = "per_call"
 
-    def __init__(self, sources_config: Path = DEFAULT_SOURCES_CONFIG) -> None:
+    def __init__(
+        self,
+        sources_config: Path = DEFAULT_SOURCES_CONFIG,
+        scoring_config: Path = DEFAULT_SCORING_CONFIG,
+    ) -> None:
         self.sources_config = sources_config
+        self.classification_confidence = self._load_classification_confidence(
+            scoring_config
+        )
+
+    @staticmethod
+    def _load_classification_confidence(path: Path) -> dict[str, float]:
+        config = yaml.safe_load(path.read_text(encoding="utf-8"))
+        values = config.get("applicant_classification_confidence")
+        expected_keys = {"explicit_marker", "name_shape", "ambiguous"}
+        if not isinstance(values, dict) or set(values) != expected_keys:
+            raise ValueError(
+                "applicant_classification_confidence must define "
+                "explicit_marker, name_shape, and ambiguous"
+            )
+        if any(
+            not isinstance(value, (int, float)) or not 0 <= value <= 1
+            for value in values.values()
+        ):
+            raise ValueError(
+                "applicant classification confidences must be numbers from 0 to 1"
+            )
+        return {key: float(value) for key, value in values.items()}
 
     def _source_config(self) -> dict[str, object]:
         registry = yaml.safe_load(self.sources_config.read_text(encoding="utf-8"))
@@ -47,7 +74,7 @@ class BiracBigConnector(Connector):
 
     def parse(self, doc: RawDoc) -> Iterable[Signal]:
         """Extract awardee signals deterministically from one immutable cohort PDF."""
-        return parse_big_awardees(doc)
+        return parse_big_awardees(doc, self.classification_confidence)
 
     def contract_raw_docs(self) -> Iterable[RawDoc]:
         """Return the two committed cohort PDFs as deterministic contract fixtures."""

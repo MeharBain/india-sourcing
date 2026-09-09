@@ -18,12 +18,13 @@ import yaml
 
 from src.connectors.base import FetchTarget
 from src.connectors.birac_big.connector import BiracBigConnector
-from src.connectors.birac_big.parser import REFERENCE_PATTERN
+from src.connectors.birac_big.parser import REFERENCE_PATTERN, _classify_applicant
 from src.core.models import RawDoc, Signal
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SOURCES_CONFIG = Path(__file__).parents[3] / "config" / "sources.yaml"
 INCUBATORS_CONFIG = Path(__file__).parents[3] / "config" / "incubators.yaml"
+SCORING_CONFIG = Path(__file__).parents[3] / "config" / "scoring.yaml"
 FIXTURE_URLS = {
     "big_21.pdf": (
         "https://birac.nic.in/webcontent/"
@@ -90,6 +91,7 @@ def _golden_summary(filename: str, expected: dict[str, object]) -> dict[str, obj
                 "applicant_name": signal.payload["applicant_name"],
                 "final_score": signal.payload["final_score"],
                 "signal_type": signal.signal_type,
+                "confidence": signal.confidence,
             }
         )
 
@@ -203,6 +205,101 @@ def test_applicant_classes_have_distinct_signal_types() -> None:
         "birac_big_company_private_limited",
         "birac_big_person",
     }
+
+
+def _classification_confidence_config() -> dict[str, float]:
+    config = yaml.safe_load(SCORING_CONFIG.read_text(encoding="utf-8"))
+    return config["applicant_classification_confidence"]
+
+
+@pytest.mark.parametrize(
+    ("applicant", "expected_class", "expected_confidence"),
+    [
+        ("Aarogya Devices Private Limited", "company_private_limited", 0.95),
+        ("Aarogya Devices LLP", "company_llp", 0.95),
+        ("Aarogya Devices (OPC)", "company_opc", 0.95),
+        ("Dr. Asha Rao", "person", 0.95),
+        ("Asha Rao", "person", 0.50),
+        ("Aarogya-Bio", "ambiguous", 0.30),
+    ],
+)
+def test_applicant_classification_uses_configured_confidence_for_each_basis(
+    applicant: str,
+    expected_class: str,
+    expected_confidence: float,
+) -> None:
+    result = _classify_applicant(applicant, _classification_confidence_config())
+
+    assert result == (expected_class, expected_confidence)
+
+
+@pytest.mark.parametrize("applicant", ["Inger Therapeutics", "Leofelis Instruments"])
+def test_unknown_business_words_remain_low_confidence_person_inferences(
+    applicant: str,
+) -> None:
+    """These are companies, but unknown shape stays low confidence.
+
+    The classifier cannot know their true type; low confidence prevents either company
+    from becoming a silent person entry in the incorporation watchlist.
+    """
+    applicant_class, confidence = _classify_applicant(
+        applicant,
+        _classification_confidence_config(),
+    )
+
+    assert applicant_class == "person"
+    assert confidence == 0.50
+    assert confidence < 0.95
+
+
+def test_cohort_class_and_confidence_distributions_are_stable() -> None:
+    config = yaml.safe_load(SCORING_CONFIG.read_text(encoding="utf-8"))
+    threshold = config["review_confidence_threshold"]
+
+    expected = {
+        "big_21.pdf": {
+            "classes": {
+                "ambiguous": 2,
+                "company_llp": 2,
+                "company_private_limited": 32,
+                "person": 15,
+            },
+            "confidences": {0.30: 2, 0.50: 8, 0.95: 41},
+            "below_review_threshold": 10,
+        },
+        "big_24.pdf": {
+            "classes": {
+                "ambiguous": 2,
+                "company_llp": 2,
+                "company_opc": 1,
+                "company_private_limited": 28,
+                "person": 18,
+            },
+            "confidences": {0.30: 2, 0.95: 49},
+            "below_review_threshold": 2,
+        },
+    }
+
+    for filename, expected_distribution in expected.items():
+        signals = _signals(filename)
+        classes = Counter(
+            signal.signal_type.removeprefix("birac_big_") for signal in signals
+        )
+        confidences = Counter(signal.confidence for signal in signals)
+        below_threshold = sum(
+            signal.confidence < threshold for signal in signals
+        )
+
+        assert len(signals) == 51
+        assert dict(classes) == expected_distribution["classes"]
+        assert dict(confidences) == expected_distribution["confidences"]
+        assert below_threshold == expected_distribution["below_review_threshold"]
+
+
+def test_review_confidence_threshold_is_configured_for_watchlist_review() -> None:
+    config = yaml.safe_load(SCORING_CONFIG.read_text(encoding="utf-8"))
+
+    assert config["review_confidence_threshold"] == 0.70
 
 
 @pytest.mark.parametrize(

@@ -489,3 +489,55 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - None.
+
+---
+
+## 2026-09-10 — task 010 confidence-bearing applicant classification
+
+**Branch / commits:** task/010-classification-confidence, this commit
+**Prompt used:** `docs/tasks/010-classification-confidence.md`
+
+**Changed**
+- Changed the BIRAC applicant classifier to return class and confidence together, retaining
+  the task-008 name-shape rule and all five ADR-012 classes.
+- Loaded validated classification confidences from `config/scoring.yaml` before parser entry
+  so the parser receives configuration without performing configuration I/O, and propagated
+  the result to `Signal.confidence`.
+- Configured explicit-marker confidence at 0.95, shape inference at 0.50, ambiguity at 0.30,
+  and the human-review threshold at 0.70.
+- Added `Shri` and `Smt` to the explicit honorific pattern required by the specification and
+  bumped the extractor version from `birac-big-v1` to `birac-big-v2`.
+- Added ADR-019, confidence regression and distribution coverage, and confidence values to
+  the ten hand-verified BIG-21 golden rows. No other field in that golden file changed.
+- Reused the existing constrained `Signal.confidence` column; no model or migration change was
+  necessary.
+
+**Tests proving it**
+- Test-first focused run after updating tests and the golden expectation: 10 failed, 19 passed.
+  Failures showed the old bare-string classifier signature and uniform confidence of 1.0.
+- `test_applicant_classification_uses_configured_confidence_for_each_basis` covers private
+  limited, LLP, OPC, honorific person, shape-only person, and ambiguity bases.
+- `test_unknown_business_words_remain_low_confidence_person_inferences` proves that stripped
+  `Inger Therapeutics` and `Leofelis Instruments` remain person-shaped but receive only 0.50.
+- `test_cohort_class_and_confidence_distributions_are_stable` preserves both 51-row class
+  distributions and verifies confidence counts and review-threshold routing.
+- Pre-change `uv run pytest` — 73 passed. Post-change `uv run pytest` — 83 passed.
+- `uv run ruff check .` — all checks passed.
+
+**Cohort distributions**
+- BIG-21 classes: ambiguous 2, company LLP 2, company private limited 32, person 15. Confidence:
+  0.30 = 2, 0.50 = 8, 0.95 = 41; 10 signals fall below the 0.70 review threshold.
+- BIG-24 classes: ambiguous 2, company LLP 2, company OPC 1, company private limited 28,
+  person 18. Confidence: 0.30 = 2, 0.95 = 49; 2 signals fall below the threshold.
+
+**Unfinished**
+- The review queue consumer is intentionally out of scope; this task makes its threshold and
+  low-confidence inputs explicit and testable.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-019: classification by name shape is recorded as low-confidence inference, never as
+  fact, because a confident company-as-person error would silently corrupt the incorporation
+  watchlist.

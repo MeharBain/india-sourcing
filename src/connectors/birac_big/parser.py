@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -25,7 +25,10 @@ _PRIVATE_LIMITED = re.compile(
 )
 _LLP = re.compile(r"\bllp\.?$", re.IGNORECASE)
 _OPC = re.compile(r"\bopc\b", re.IGNORECASE)
-_HONORIFIC = re.compile(r"^(?:dr|mr|mrs|ms|prof)\.?\s+", re.IGNORECASE)
+_HONORIFIC = re.compile(
+    r"^(?:dr|mr|mrs|ms|prof|shri|smt)\.?\s+",
+    re.IGNORECASE,
+)
 _NAME_TOKEN = re.compile(r"[A-Za-z]+|[A-Za-z]\.")
 _BUSINESS_WORDS = {
     "biosciences",
@@ -41,7 +44,7 @@ _BUSINESS_WORDS = {
     "solutions",
     "technologies",
 }
-EXTRACTOR_VERSION = "birac-big-v1"
+EXTRACTOR_VERSION = "birac-big-v2"
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,15 +185,19 @@ def _rows_from_table(
     return rows
 
 
-def _classify_applicant(applicant: str) -> str:
+def _classify_applicant(
+    applicant: str,
+    confidence_by_basis: Mapping[str, float],
+) -> tuple[str, float]:
+    explicit_confidence = confidence_by_basis["explicit_marker"]
     if _OPC.search(applicant):
-        return "company_opc"
+        return "company_opc", explicit_confidence
     if _LLP.search(applicant):
-        return "company_llp"
+        return "company_llp", explicit_confidence
     if _PRIVATE_LIMITED.search(applicant):
-        return "company_private_limited"
+        return "company_private_limited", explicit_confidence
     if _HONORIFIC.search(applicant):
-        return "person"
+        return "person", explicit_confidence
 
     tokens = _NAME_TOKEN.findall(applicant)
     words = {token.rstrip(".").casefold() for token in tokens}
@@ -200,7 +207,9 @@ def _classify_applicant(applicant: str) -> str:
         and not words.intersection(_BUSINESS_WORDS)
         and _normalise_space(" ".join(tokens)).replace(" .", ".") == applicant
     )
-    return "person" if conservative_person_shape else "ambiguous"
+    if conservative_person_shape:
+        return "person", confidence_by_basis["name_shape"]
+    return "ambiguous", confidence_by_basis["ambiguous"]
 
 
 def _publication_timestamp(url: str) -> str:
@@ -216,7 +225,10 @@ def _event_year(reference: str) -> int:
     return 2000 + suffix
 
 
-def parse_big_awardees(doc: RawDoc) -> Iterable[Signal]:
+def parse_big_awardees(
+    doc: RawDoc,
+    confidence_by_basis: Mapping[str, float],
+) -> Iterable[Signal]:
     """Parse supported BIRAC BIG cohort layouts into fully-provenanced signals."""
     path = Path(doc.storage_path)
     with pdfplumber.open(path) as pdf:
@@ -247,7 +259,10 @@ def parse_big_awardees(doc: RawDoc) -> Iterable[Signal]:
         cohort_number = re.search(r"/BIG-?(\d+)/", row.reference)
         if cohort_number is None:
             raise ValueError(f"Reference does not contain a BIG cohort: {row.reference}")
-        applicant_class = _classify_applicant(row.applicant_name)
+        applicant_class, confidence = _classify_applicant(
+            row.applicant_name,
+            confidence_by_basis,
+        )
         yield build_signal(
             signal_type=f"birac_big_{applicant_class}",
             source_id=doc.source_id,
@@ -265,6 +280,6 @@ def parse_big_awardees(doc: RawDoc) -> Iterable[Signal]:
                 "list_published_at": published_at,
             },
             raw_doc_id=doc.id,
-            confidence=1.0,
+            confidence=confidence,
             extractor_version=EXTRACTOR_VERSION,
         )

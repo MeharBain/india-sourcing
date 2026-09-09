@@ -28,7 +28,8 @@
       "proposal_reference_number": "BIRAC/SINE0492/BIG-21/22",
       "applicant_name": "Magnimous Info Tech Private Limited",
       "final_score": 77.86,
-      "signal_type": "birac_big_company_private_limited"
+      "signal_type": "birac_big_company_private_limited",
+      "confidence": 0.95
     },
     {
       "category": "Medical Devices",
@@ -36,7 +37,8 @@
       "proposal_reference_number": "BIRAC/FITT01189/BIG21/22",
       "applicant_name": "Dr. Deepak Agrawal",
       "final_score": 74.57,
-      "signal_type": "birac_big_person"
+      "signal_type": "birac_big_person",
+      "confidence": 0.95
     },
     {
       "category": "Medical Devices",
@@ -44,7 +46,8 @@
       "proposal_reference_number": "BIRAC/SINE0489/BIG-21/22",
       "applicant_name": "Raycura Medical Technologies Private Limited",
       "final_score": 69.99,
-      "signal_type": "birac_big_company_private_limited"
+      "signal_type": "birac_big_company_private_limited",
+      "confidence": 0.95
     },
     {
       "category": "Diagnostics",
@@ -52,7 +55,8 @@
       "proposal_reference_number": "BIRAC/IKP01613/BIG-21/22",
       "applicant_name": "Spotdot Bioinnovations Private Limited",
       "final_score": 78.28,
-      "signal_type": "birac_big_company_private_limited"
+      "signal_type": "birac_big_company_private_limited",
+      "confidence": 0.95
     },
     {
       "category": "Diagnostics",
@@ -60,7 +64,8 @@
       "proposal_reference_number": "BIRAC/CCAMP01892/BIG21/22",
       "applicant_name": "Govindkumar Balagannavar",
       "final_score": 77.06,
-      "signal_type": "birac_big_person"
+      "signal_type": "birac_big_person",
+      "confidence": 0.5
     },
     {
       "category": "Industrial Biotechnology, Clean Energy & Environment",
@@ -68,7 +73,8 @@
       "proposal_reference_number": "BIRAC/VENTURE0923/BIG21/22",
       "applicant_name": "Biopol Biosciences",
       "final_score": 72.03,
-      "signal_type": "birac_big_ambiguous"
+      "signal_type": "birac_big_ambiguous",
+      "confidence": 0.3
     },
     {
       "category": "Industrial Biotechnology, Clean Energy & Environment",
@@ -76,7 +82,8 @@
       "proposal_reference_number": "BIRAC/CCAMP01879/BIG21/22",
       "applicant_name": "Scitechesy Research and Technology Private Limited",
       "final_score": 71.96,
-      "signal_type": "birac_big_company_private_limited"
+      "signal_type": "birac_big_company_private_limited",
+      "confidence": 0.95
     },
     {
       "category": "Agriculture and allied areas",
@@ -84,7 +91,8 @@
       "proposal_reference_number": "BIRAC/CCAMP01858/BIG21/22",
       "applicant_name": "Kissanconnect LLP",
       "final_score": 75.6,
-      "signal_type": "birac_big_company_llp"
+      "signal_type": "birac_big_company_llp",
+      "confidence": 0.95
     },
     {
       "category": "Drugs and related areas",
@@ -92,7 +100,8 @@
       "proposal_reference_number": "BIRAC/IKP01636/BIG-21/22",
       "applicant_name": "VeGen Labs LLP",
       "final_score": 76.24,
-      "signal_type": "birac_big_company_llp"
+      "signal_type": "birac_big_company_llp",
+      "confidence": 0.95
     },
     {
       "category": "Drugs and related areas",
@@ -100,7 +109,8 @@
       "proposal_reference_number": "BIRAC/CCAMP01838/BIG21/22",
       "applicant_name": "Arun",
       "final_score": 73.32,
-      "signal_type": "birac_big_ambiguous"
+      "signal_type": "birac_big_ambiguous",
+      "confidence": 0.3
     }
   ]
 }

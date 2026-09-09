@@ -222,3 +222,20 @@ and would have been incorrectly excluded by the former five-year filter.
 
 **To reverse:** Show that company age independently predicts an out-of-scope opportunity after
 controlling for prior institutional equity, without excluding relevant slow-maturing companies.
+
+## ADR-019: Classification by name shape is recorded as low-confidence inference, never as fact
+
+**Decision:** Record applicant classification from a conservative personal-name shape at 0.50
+confidence, never as fact. Explicit legal suffixes and honorifics carry 0.95 confidence, while
+names with no signal in either direction remain ambiguous at 0.30. Signals below the configured
+review threshold require human confirmation before watchlist use.
+
+**Reason:** A denylist cannot enumerate every word used by a business. A company with a
+person-shaped name can otherwise be misclassified confidently as an individual and silently
+enter the incorporation watchlist established by ADR-017. Preserving the useful shape prior
+while exposing its uncertainty routes that dangerous error to review instead of presenting it
+as source fact.
+
+**To reverse:** Replace name-shape inference with authoritative applicant types or a validated
+classifier that demonstrably eliminates this company-as-person failure mode without reducing
+coverage, and retain an auditable review path for remaining uncertainty.

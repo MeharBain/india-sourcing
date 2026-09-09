@@ -1,1 +1,9 @@
 # Deterministic scoring configuration belongs here in a later implementation phase.
+
+applicant_classification_confidence:
+  explicit_marker: 0.95
+  name_shape: 0.50
+  ambiguous: 0.30
+
+# Signals below this threshold require human confirmation before watchlist use.
+review_confidence_threshold: 0.70
