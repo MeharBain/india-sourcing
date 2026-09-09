@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -120,10 +119,6 @@ def _fetcher(*, url: str, source_id: UUID, session: object) -> RawDoc:
     return _raw_doc(source_id, url)
 
 
-def _health(source: Source) -> dict[str, object]:
-    return json.loads(source.health_status)
-
-
 def test_registry_discovers_concrete_connector_subclasses(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -162,13 +157,13 @@ def test_discover_failure_does_not_stop_other_connectors_and_records_health() ->
     )
 
     assert [signal.payload for signal in session.signals] == [{"name": "Good Bio"}]
-    assert _health(failed) == {
-        "status": "failed",
-        "consecutive_failures": 1,
-        "error_type": "RuntimeError",
-        "message": "listing changed",
-    }
-    assert _health(good) == {"status": "healthy", "consecutive_failures": 0}
+    assert failed.health_status == "failed"
+    assert failed.consecutive_failures == 1
+    assert failed.last_error == "listing changed"
+    assert failed.last_failure_at is not None
+    assert good.health_status == "healthy"
+    assert good.consecutive_failures == 0
+    assert good.last_success_at is not None
     assert session.commits == 2
 
 
@@ -184,20 +179,19 @@ def test_parse_failure_does_not_stop_other_connectors_and_records_health() -> No
     )
 
     assert [signal.payload for signal in session.signals] == [{"name": "Good Bio"}]
-    assert _health(failed)["status"] == "failed"
-    assert _health(failed)["consecutive_failures"] == 1
-    assert _health(failed)["error_type"] == "ValueError"
-    assert _health(good) == {"status": "healthy", "consecutive_failures": 0}
+    assert failed.health_status == "failed"
+    assert failed.consecutive_failures == 1
+    assert failed.last_error == "table changed"
+    assert failed.last_failure_at is not None
+    assert good.health_status == "healthy"
+    assert good.consecutive_failures == 0
+    assert good.last_success_at is not None
     assert session.commits == 2
 
 
-def test_three_consecutive_failures_are_distinguishable_from_one() -> None:
-    failed_once = _source("failed_once")
-    failed_three_times = _source(ParseFailureConnector.key)
-    session = FakeSession([failed_once, failed_three_times])
-    failed_once.health_status = json.dumps(
-        {"status": "failed", "consecutive_failures": 1}, separators=(",", ":")
-    )
+def test_three_consecutive_failures_then_success_resets_source_health() -> None:
+    source = _source(ParseFailureConnector.key)
+    session = FakeSession([source])
 
     for _ in range(3):
         run_connectors(
@@ -206,6 +200,14 @@ def test_three_consecutive_failures_are_distinguishable_from_one() -> None:
             fetcher=_fetcher,
         )
 
-    assert _health(failed_once)["consecutive_failures"] == 1
-    assert _health(failed_three_times)["consecutive_failures"] == 3
-    assert session.commits == 3
+    assert source.health_status == "failed"
+    assert source.consecutive_failures == 3
+
+    recovered = GoodConnector()
+    recovered.key = ParseFailureConnector.key
+    run_connectors(session=session, connectors=[recovered], fetcher=_fetcher)
+
+    assert source.health_status == "healthy"
+    assert source.consecutive_failures == 0
+    assert source.last_success_at is not None
+    assert session.commits == 4

@@ -1,6 +1,6 @@
 # 006 — Typed source health tracking
 
-**Status:** blocked
+**Status:** complete
 **Branch:** task/006-source-health-columns
 **Depends on:** 004 merged. Independent of 005 — the two touch disjoint files.
 
@@ -79,8 +79,9 @@ The CHECK constraint follows the existing pattern in `ReviewEvent.action`.
    gone and `health_status` survives, `alembic upgrade head` again.
 
 4. The orchestrator writes the typed columns rather than a serialised document. Specifically:
-   on connector success, `health_status = 'ok'`, `consecutive_failures = 0`, `last_success_at`
-   set. On failure, `health_status = 'failing'`, `consecutive_failures` incremented,
+   on connector success, `health_status = 'healthy'`, `consecutive_failures = 0`,
+   `last_success_at` set. On failure, `health_status = 'failed'`, `consecutive_failures`
+   incremented,
    `last_error` and `last_failure_at` set.
 
 5. No JSON is written into `health_status`. Demonstrate by quoting the orchestrator's
@@ -109,7 +110,7 @@ The CHECK constraint follows the existing pattern in `ReviewEvent.action`.
 
 6. A test asserts that after three simulated consecutive failures of one connector,
    `consecutive_failures == 3`, and that a subsequent success resets it to `0` and sets
-   `health_status` to `'ok'`.
+   `health_status` to `'healthy'`.
 
 7. A test asserts the escalation predicate is expressible as a plain filter — that querying
    sources with `consecutive_failures >= 3` returns the failing source and not a healthy one.
@@ -161,22 +162,3 @@ PROGRESS.md                         session entry
   deletion, not hardening.
 - **Scope creep into escalation.** Escalation is a digest feature and does not exist yet. This
   task ends when the predicate is queryable and tested.
-
----
-
-## Blockers and questions
-
-### 2026-09-10 — health-status vocabulary conflict
-
-Acceptance criterion 1 requires `ck_source_health_status` to allow exactly `'healthy'`,
-`'failed'`, and `'unknown'`. Acceptance criteria 4 and 6 instead require the orchestrator to
-write and test `'ok'` and `'failing'`. A database satisfying criterion 1 would reject the
-values required by criteria 4 and 6, so the criteria cannot all be met.
-
-Which vocabulary should be authoritative?
-
-- **Recommended:** keep `'healthy'`, `'failed'`, and `'unknown'`, because criterion 1 explicitly
-  says these match the existing orchestrator vocabulary and defines the exact CHECK constraint.
-  Amend criteria 4 and 6 to say `'healthy'` and `'failed'`.
-- Alternatively, use `'ok'`, `'failing'`, and `'unknown'`, and amend criterion 1 (including its
-  rationale) to match.

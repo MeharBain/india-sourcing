@@ -1,8 +1,19 @@
 """Schema-level tests for the persistent data-model invariants."""
 
-from sqlalchemy import UniqueConstraint
+import pytest
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    create_engine,
+)
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
 
-from src.core.models import SQLModel
+from src.core.models import Source, SQLModel
 
 
 def _table(name: str):
@@ -74,6 +85,83 @@ def test_workflow_tables_are_tenant_scoped_but_tenant_is_not() -> None:
     assert "tenant_id" in _table("score").c
     assert "tenant_id" in _table("review_event").c
     assert "tenant_id" not in _table("tenant").c
+
+
+def test_source_health_columns_are_typed_and_constrained() -> None:
+    table = _table("source")
+    columns = table.c
+
+    assert isinstance(columns.health_status.type, String)
+    assert columns.health_status.nullable is False
+    assert str(columns.health_status.server_default.arg) == "unknown"
+    assert isinstance(columns.consecutive_failures.type, Integer)
+    assert columns.consecutive_failures.nullable is False
+    assert str(columns.consecutive_failures.server_default.arg) == "0"
+    assert isinstance(columns.last_error.type, Text)
+    assert columns.last_error.nullable is True
+    assert isinstance(columns.last_failure_at.type, DateTime)
+    assert columns.last_failure_at.type.timezone is True
+    assert columns.last_failure_at.nullable is True
+
+    health_constraint = next(
+        constraint
+        for constraint in table.constraints
+        if isinstance(constraint, CheckConstraint)
+        and constraint.name == "ck_source_health_status"
+    )
+    assert str(health_constraint.sqltext) == (
+        "health_status IN ('healthy', 'failed', 'unknown')"
+    )
+
+
+def test_source_escalation_predicate_filters_by_consecutive_failures() -> None:
+    engine = create_engine("sqlite://")
+    Source.__table__.create(engine)
+    failing = Source(
+        key="failing",
+        name="Failing source",
+        tier=1,
+        category="grant",
+        cadence="weekly",
+        health_status="failed",
+        consecutive_failures=3,
+    )
+    healthy = Source(
+        key="healthy",
+        name="Healthy source",
+        tier=1,
+        category="grant",
+        cadence="weekly",
+        health_status="healthy",
+        consecutive_failures=0,
+    )
+
+    with Session(engine) as session:
+        session.add_all([failing, healthy])
+        session.commit()
+        escalated = session.exec(
+            select(Source).where(Source.consecutive_failures >= 3)
+        ).all()
+
+    assert [source.key for source in escalated] == ["failing"]
+
+
+def test_source_health_check_rejects_unexpected_status() -> None:
+    engine = create_engine("sqlite://")
+    Source.__table__.create(engine)
+    source = Source(
+        key="invalid",
+        name="Invalid source",
+        tier=1,
+        category="grant",
+        cadence="weekly",
+        health_status="unexpected",
+    )
+
+    with Session(engine) as session:
+        session.add(source)
+        with pytest.raises(IntegrityError, match="ck_source_health_status"):
+            session.commit()
 
 
 def test_postgres_json_fields_use_jsonb() -> None:

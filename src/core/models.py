@@ -4,7 +4,7 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Float, Text, func
+from sqlalchemy import CheckConstraint, Column, DateTime, Float, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -27,6 +27,12 @@ class Source(SQLModel, table=True):
     """A registered public data source and its latest health state."""
 
     __tablename__ = "source"
+    __table_args__ = (
+        CheckConstraint(
+            "health_status IN ('healthy', 'failed', 'unknown')",
+            name="ck_source_health_status",
+        ),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     key: str = Field(unique=True, index=True)
@@ -38,7 +44,19 @@ class Source(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True)),
     )
-    health_status: str
+    health_status: str = Field(
+        default="unknown",
+        sa_column=Column(String, nullable=False, server_default="unknown"),
+    )
+    consecutive_failures: int = Field(
+        default=0,
+        sa_column=Column(Integer, nullable=False, server_default="0"),
+    )
+    last_error: str | None = Field(default=None, sa_column=Column(Text))
+    last_failure_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True)),
+    )
 
 
 class RawDoc(SQLModel, table=True):

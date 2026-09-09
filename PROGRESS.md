@@ -365,3 +365,40 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - None.
+
+---
+
+## 2026-09-10 — task 006 typed source health tracking
+
+**Branch / commits:** task/006-source-health-columns, this commit
+**Prompt used:** `docs/tasks/006-source-health-columns.md`
+
+**Changed**
+- Replaced JSON text in `source.health_status` with constrained status text, an integer
+  consecutive-failure counter, and typed latest-failure details.
+- Added the reversible `c4b9e2d7a106` migration and verified its upgrade, downgrade, and final
+  upgrade against Neon.
+- Updated connector orchestration to write the typed fields directly and removed JSON parsing,
+  including `_failure_count` and its silent exception handler.
+- Added database-backed tests for the three-failure escalation predicate, invalid-status CHECK
+  rejection, and failure-counter reset after recovery.
+
+**Tests proving it**
+- Pre-change `uv run pytest` — 50 passed.
+- Post-change `uv run pytest` — 53 passed.
+- `uv run ruff check .` — all checks passed.
+- `uv run alembic check` against Neon — no new upgrade operations detected.
+- Neon round-trip — upgraded to `c4b9e2d7a106`, confirmed the four typed columns through
+  `information_schema.columns`, downgraded to `f9fda2306f8a` and confirmed only
+  `health_status` remained, then upgraded to head again.
+- A rolled-back Neon insert confirmed `ck_source_health_status` rejects an unexpected value.
+
+**Unfinished**
+- Digest and direct-alert escalation remain intentionally out of scope; the required SQL
+  predicate is now expressible and tested.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None.

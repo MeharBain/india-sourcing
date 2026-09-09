@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
@@ -40,36 +39,6 @@ def _source_for_connector(session: Session, connector: Connector) -> Source:
     if source is None:
         raise LookupError(f"No source row exists for connector key {connector.key!r}")
     return source
-
-
-def _failure_count(health_status: str) -> int:
-    try:
-        health = json.loads(health_status)
-    except (json.JSONDecodeError, TypeError):
-        return 0
-    if health.get("status") != "failed":
-        return 0
-    count = health.get("consecutive_failures", 0)
-    return count if isinstance(count, int) and count >= 0 else 0
-
-
-def _healthy_status() -> str:
-    return json.dumps(
-        {"status": "healthy", "consecutive_failures": 0},
-        separators=(",", ":"),
-    )
-
-
-def _failed_status(source: Source, error: Exception) -> str:
-    return json.dumps(
-        {
-            "status": "failed",
-            "consecutive_failures": _failure_count(source.health_status) + 1,
-            "error_type": type(error).__name__,
-            "message": str(error),
-        },
-        separators=(",", ":"),
-    )
 
 
 def _validate_signal(signal: Signal, source: Source, raw_docs: dict[UUID, RawDoc]) -> None:
@@ -119,7 +88,8 @@ def run_connectors(
                 _validate_signal(signal, source, raw_docs_by_id)
 
             session.add_all(signals)
-            source.health_status = _healthy_status()
+            source.health_status = "healthy"
+            source.consecutive_failures = 0
             source.last_success_at = now()
             session.add(source)
             session.commit()
@@ -128,6 +98,9 @@ def run_connectors(
             logger.exception("Connector %s failed", connector.key)
             if source is None:
                 continue
-            source.health_status = _failed_status(source, error)
+            source.health_status = "failed"
+            source.consecutive_failures += 1
+            source.last_error = str(error)
+            source.last_failure_at = now()
             session.add(source)
             session.commit()
