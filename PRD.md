@@ -279,8 +279,9 @@ Person matching gets the same treatment with an additional initials-expansion st
 
 ## 8. Scoring model v0
 
-Score is 0 to 100, computed per tenant. Weights live in `config/scoring.yaml` so they can
-be tuned without a deploy.
+Score is 0 to 85 per tenant while the readiness component is disabled; the nominal range is
+0 to 100 and will be restored when readiness is built. Weights live in `config/scoring.yaml`
+so they can be tuned without a deploy.
 
 ### Component: source strength (max 35 pts)
 
@@ -375,8 +376,9 @@ Delivered Monday morning. Email or Slack. Fixed structure:
 
 - **New this week** (5 to 10 companies). One line each: company, one-sentence description,
   strongest signal with date, score, why-now sentence.
-- **Entering the window** (3 to 5). Companies whose timing component just crossed into the
-  12-to-20-month band.
+- **Entering the window.** *Deferred.* This section was defined by the timing component,
+  which is disabled at weight 0 (see section 8). It cannot be built until a readiness model
+  exists. Do not implement a placeholder that silently returns nothing.
 - **Movers.** Companies whose score changed materially, and the specific signal that caused it.
 - **Needs review.** Count of pending entity-resolution decisions, linked.
 - **Source health.** Any connector that failed. Non-negotiable; a silently broken scraper
@@ -507,12 +509,13 @@ Done when: a digest lands in your inbox on Monday without you doing anything.
 Build the 50-company golden set properly. Back-test. Measure lead time and recall. Tune
 weights against results, not intuition.
 
-Done when: you have a number for median lead time you'd be willing to put on a sales deck.
+Done when: you have a defensible precision figure for the readiness ranking — of the top 10
+surfaced, how many raised institutional capital within 18 months.
 
 ### Phase 6+ — productisation
 
 Auth, tenancy activation, billing, contact discovery, outreach drafting, CRM export.
-Not before Phase 5 produces a defensible lead-time number.
+Not before Phase 5 produces a defensible precision figure for the readiness ranking.
 
 ---
 
@@ -520,7 +523,8 @@ Not before Phase 5 produces a defensible lead-time number.
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| Lead-time premise doesn't hold | Fatal | Phase 0 test before any code |
+| Lead-time premise did not hold as stated | Resolved | Measured at 5–13 years, not 9–18 months. Product reframed around readiness ranking. See ADR-015 and `docs/FEASIBILITY_TEST.md` |
+| Readiness ranking cannot be modelled | Fatal | Detection is solved; if readiness cannot be predicted the digest is unrankable. Open — no mitigation yet |
 | Source availability worse than assumed (CAPTCHAs, logins, no bulk access) | High | Phase 0 audit; design for PDF-first from the start |
 | Entity resolution quality caps everything downstream | High | Phase 2 early, human-in-loop, log all decisions |
 | Buyer market is small (~100–200 Indian funds who'd pay) | Medium | Explore adjacent buyers: global funds, corporates, agencies |

@@ -1,6 +1,6 @@
 # 007 — Remove dangling references to the deleted timing component
 
-**Status:** blocked
+**Status:** complete
 **Branch:** task/007-dangling-timing-references
 **Depends on:** 005 merged. Independent of 006 — disjoint files, and 006 is a code task on the
 separate merge track.
@@ -71,6 +71,15 @@ The second row is the live version of this risk and currently appears nowhere.
 
 ---
 
+### 4a. Section 13, Phase 6+ gate — added after blocker resolution
+
+`Not before Phase 5 produces a defensible lead-time number.` points at a Phase 5 output that
+criterion 4 removes. Replace with:
+
+> Not before Phase 5 produces a defensible precision figure for the readiness ranking.
+
+---
+
 ## Out of scope
 
 - Any change under `src/`, `tests/`, `migrations/` or `config/`
@@ -95,11 +104,20 @@ The second row is the live version of this risk and currently appears nowhere.
 5. Section 14's risk table contains both replacement rows and no longer contains the original
    lead-time row.
 
+5a. Section 13's Phase 6+ gate reads exactly as specified in scope item 4a. The string
+   `defensible lead-time number` no longer appears in `PRD.md`.
+
 6. **A full-document consistency sweep is reported.** Search `PRD.md` for every occurrence of
    `timing`, `lead time`, `lead-time`, `9 to 18`, `9-to-18` and `months` and list each hit with
    a one-line judgement: correct as-is, or corrected by this task. This is the step task 005
-   lacked. If the sweep finds anything not covered by criteria 1–5, **stop and raise it as a
-   blocker** rather than fixing it silently — the spec should be amended to cover it.
+   lacked.
+
+   The sweep was performed on 2026-09-10 and found one uncovered item, now handled by criteria
+   4a and 5a. **Re-run it after making the edits** and report the result again — the edits
+   themselves change the document, and the second pass confirms nothing new was introduced.
+
+   If the re-run finds anything still not covered, **stop and raise it as a blocker** rather
+   than fixing it silently.
 
 7. `Score.total` CHECK constraint in `src/core/models.py` is unchanged. Confirm explicitly.
 
@@ -136,46 +154,27 @@ Nothing else.
 
 ## Blockers and questions
 
-### 2026-09-10 — Phase 6 still depends on the removed Phase 5 lead-time output
+### 2026-09-10 — Codex: stale Phase 6 gate at `PRD.md:515`
 
-The criterion-6 consistency sweep found one stale reference that criteria 1–5 do not cover:
-section 13 Phase 6 says `Not before Phase 5 produces a defensible lead-time number.` The
-specified Phase 5 correction instead makes its completion output a defensible precision figure
-for the readiness ranking. Leaving the Phase 6 gate unchanged would preserve an internal
-contradiction; changing it now would exceed the accepted scope.
+**Raised.** Criterion 4 changes Phase 5's completion condition to readiness-ranking precision,
+leaving `Not before Phase 5 produces a defensible lead-time number.` stale. Recommended
+replacement: `Not before Phase 5 produces a defensible precision figure for the readiness
+ranking.`
 
-Decision needed:
+**Decision — Claude, 2026-09-10: accepted exactly as recommended.** Correct catch, correct fix.
+Added as scope item 4a and criterion 5a. Resume the task.
 
-1. **Recommended:** amend the scope and acceptance criteria to replace the Phase 6 sentence
-   with `Not before Phase 5 produces a defensible precision figure for the readiness ranking.`
-2. Remove the Phase 6 gating sentence entirely.
-3. Retain the lead-time gate and explain why a defensible lead-time number remains a separate
-   prerequisite even though it is no longer Phase 5's completion condition.
+The blocker protocol was followed correctly here: swept, stopped, committed the task file
+alone, changed nothing else. This is the behaviour the protocol is for.
 
-Full consistency sweep, against `PRD.md` before any task-007 corrections:
+### Noted but deliberately out of scope
 
-| Search term | Line | Hit | Judgement |
-|---|---:|---|---|
-| `timing` | 378 | `timing component just crossed` | Corrected by criterion 2. |
-| `lead time` | 16 | `The product bet is **lead time**` | Correct as-is: section 1 states the measured finding and reframed value proposition. |
-| `lead time` | 325 | `9-to-18-month lead time` | Correct as-is: historical explanation inside section 8's readiness block. |
-| `lead time` | 439 | `Lead time is no longer the headline metric` | Correct as-is: section 12 states the current metric decision. |
-| `lead time` | 463 | `meaningful lead time` | Correct as-is: Phase 0's historical feasibility threshold. |
-| `lead time` | 507 | `Measure lead time and recall` | Correct as-is: lead time remains a supporting validation measurement, not the completion gate. |
-| `lead time` | 510 | `median lead time` | Corrected by criterion 4. |
-| `lead-time` | 460 | `Lead-time feasibility test` | Correct as-is: the named Phase 0 test remains part of the build record. |
-| `lead-time` | 515 | `defensible lead-time number` | **Blocker:** stale Phase 6 gate not covered by criteria 1–5. |
-| `lead-time` | 523 | `Lead-time premise doesn't hold` | Corrected by criterion 5. |
-| `9 to 18` | — | No hits. | Correct as-is. |
-| `9-to-18` | 325 | `9-to-18-month lead time` | Correct as-is: historical explanation explicitly retained by criterion 1. |
-| `months` | 147 | `fourteen months later` | Correct as-is: concrete watchlist example. |
-| `months` | 175 | `18 months after filing` | Correct as-is: statutory patent-publication lag. |
-| `months` | 324 | `months elapsed` | Correct as-is: historical description in the readiness block. |
-| `months` | 325 | `12–20 months` | Correct as-is: historical explanation explicitly retained by criterion 1. |
-| `months` | 360 | `last 36 months` | Correct as-is: current signal-recency suppressor. |
-| `months` | 361 | `signal in 36 months` | Correct as-is: current sole-director suppressor. |
-| `months` | 364 | `last 24 months` | Correct as-is: explicitly removed former suppressor. |
-| `months` | 437 | `within 18 months` | Correct as-is: readiness-ranking outcome horizon. |
-| `months` | 445 | `last 18 months` | Correct as-is: golden-set sampling window. |
-| `months` | 461 | `last 18 months` | Correct as-is: Phase 0 cohort sampling window. |
-| `months` | 462 | `by how many months` | Correct as-is: Phase 0 measurement instruction. |
+Codex judged `PRD.md:463` a "historical Phase 0 threshold" and marked it correct as-is. That
+judgement is accepted **for this task**, but it points at a larger problem: section 13's phase
+plan still presents Phase 0 as pending and carries the superseded 15-of-20 decision rule, and
+the whole build sequence predates the product reframing. Section 12's supporting metrics may
+have the same issue.
+
+That is a separate concern — rewriting a stale build plan, not removing dangling references to
+a deleted scoring component. It gets its own task. **Do not touch section 13 beyond criteria 4
+and 5a, or section 12 at all.**

@@ -330,3 +330,38 @@ web-capable agent. Codex is not involved until Day 6.
 - ADR-017: individual and faculty BIG awards create an incorporation watchlist with a known
   founder and 18-month window.
 - ADR-018: validation-set inclusion follows first institutional equity, never company age.
+
+---
+
+## 2026-09-10 — task 007 dangling timing references
+
+**Branch / commits:** task/007-dangling-timing-references, this commit
+**Prompt used:** `docs/tasks/007-dangling-timing-references.md`
+
+**Changed**
+- Replaced the disabled timing component's dangling weekly-digest feature with an explicit
+  deferral and documented the current 85-point achievable score.
+- Aligned the Phase 5 completion condition, Phase 6 gate, and risk table with readiness-ranking
+  precision while preserving the historical lead-time evidence.
+- Recorded that task 005's exact-text acceptance criteria did not catch downstream references.
+  Future specifications that remove or rename a concept should include a full-document
+  consistency sweep, because named-section replacements alone cannot prove dependent prose is
+  coherent.
+
+**Tests proving it**
+- Post-edit consistency searches covered every occurrence of `timing`, `lead time`,
+  `lead-time`, `9 to 18`, `9-to-18`, and `months` in `PRD.md`; no uncovered item remained.
+- `uv run pytest` — 50 passed.
+- `uv run ruff check .` — all checks passed.
+
+**Unfinished**
+- The readiness model remains intentionally unbuilt and disabled pending a data-backed future
+  task.
+- The older section 13 build plan and section 12 supporting metrics were deliberately left for
+  a separate task, as directed by the resolved task-007 blocker.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None.
