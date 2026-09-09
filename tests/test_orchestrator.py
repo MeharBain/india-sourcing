@@ -72,7 +72,15 @@ def _raw_doc(source_id: UUID, url: str) -> RawDoc:
     )
 
 
-class GoodConnector(Connector):
+class _FixtureConnector(Connector):
+    def contract_raw_docs(self) -> Iterable[RawDoc]:
+        return []
+
+    def contract_signals(self) -> Iterable[Signal]:
+        return []
+
+
+class GoodConnector(_FixtureConnector):
     key = "good"
     cadence = "weekly"
 
@@ -93,7 +101,7 @@ class GoodConnector(Connector):
         ]
 
 
-class DiscoverFailureConnector(Connector):
+class DiscoverFailureConnector(_FixtureConnector):
     key = "discover_failure"
     cadence = "weekly"
 
@@ -104,7 +112,7 @@ class DiscoverFailureConnector(Connector):
         return []
 
 
-class ParseFailureConnector(Connector):
+class ParseFailureConnector(_FixtureConnector):
     key = "parse_failure"
     cadence = "weekly"
 
@@ -135,6 +143,10 @@ def test_registry_discovers_concrete_connector_subclasses(
         "    def discover(self):\n"
         "        return []\n"
         "    def parse(self, doc):\n"
+        "        return []\n"
+        "    def contract_raw_docs(self):\n"
+        "        return []\n"
+        "    def contract_signals(self):\n"
         "        return []\n",
         encoding="utf-8",
     )

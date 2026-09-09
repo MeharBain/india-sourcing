@@ -1,0 +1,25 @@
+{
+  "cohort": "BIG-24",
+  "signal_count": 51,
+  "section_counts": {
+    "Medical Devices and Diagnostics": 20,
+    "Industrial Biotechnology, Clean Energy & Environment": 8,
+    "Agriculture and allied areas": 15,
+    "Drugs and related areas": 8
+  },
+  "class_distribution": {
+    "ambiguous": 2,
+    "company_llp": 2,
+    "company_opc": 1,
+    "company_private_limited": 28,
+    "person": 18
+  },
+  "ambiguous_applicants": ["BacAlt BioSciences", "Trish-I"],
+  "provisional_values": [true],
+  "event_dates": ["2024-01-01"],
+  "event_date_precision_values": ["year"],
+  "event_year_source_values": ["proposal_reference_number"],
+  "list_published_at_values": ["2025-10-06T12:13:12Z"],
+  "rows_with_scores": 0,
+  "hand_verified_rows": []
+}

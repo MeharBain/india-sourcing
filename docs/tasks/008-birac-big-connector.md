@@ -1,6 +1,6 @@
 # 008 — BIRAC BIG connector
 
-**Status:** blocked
+**Status:** complete
 **Branch:** task/008-birac-big-connector
 **Depends on:** 006 merged (orchestrator writes typed health columns). Fixtures placed by the
 human before work begins — see Prerequisites.
@@ -165,10 +165,10 @@ Agriculture 14, Drugs 9.
    The `desc_new.php?id=836` guess recorded earlier is wrong. Set `verified: true`.
 4. `src/connectors/base.py` — declare `contract_raw_docs()` and `contract_signals()` on the
    `Connector` ABC. See criterion 10.
-5. `discover()` scrapes `big.php`. Filenames are unix-timestamp prefixed and follow no
-   consistent convention (`1759752792_big_24_awardees.pdf`,
-   `1676014626_Final_list_of_BIG_21_Awardees.pdf`, `1645462288_BIG_19_Final_list.pdf`), so URLs
-   cannot be constructed.
+5. `discover()` returns `FetchTarget`s built from URLs recorded in `config/sources.yaml`. It
+   makes no network request. Filenames are unix-timestamp prefixed and follow no consistent
+   convention, so they are recorded as facts, never constructed. Live listing-page discovery
+   is task 010.
 
 ---
 
@@ -225,13 +225,17 @@ Agriculture 14, Drugs 9.
 5. Applicant classification produces a distinct `signal_type` per class. Report the class
    distribution for both cohorts. `ambiguous` rows are listed individually.
 
+5a. Every signal carries `event_date` as 1 January of the reference-number year, with
+    `event_date_precision`, `event_year_source` and `list_published_at` in payload. Report the
+    values produced for both cohorts.
+
 6. Signals carry a `provisional` flag set from footnote detection, per ADR-011. Both fixtures
    are provisional.
 
 7. `parse()` is pure and passes the existing purity boundary in `tests/test_contracts.py`.
 
-8. `discover()` has a test with a mocked `big.php` response, asserting it returns targets for
-   BIG-21 and BIG-24 without constructing URLs from a pattern.
+8. `discover()` has a test asserting it returns exactly the two configured targets and makes
+   no network call. `conftest.py` should enforce the latter already; assert it explicitly.
 
 9. `config/sources.yaml` `birac_big` entry corrected per scope item 3.
 
@@ -332,3 +336,53 @@ What should `event_date` mean for these signals?
   year, explicitly accepting the false precision.
 - Using `raw_doc.fetched_at.date()` is not recommended because identical source content fetched
   on different days would receive different event dates.
+
+### Decision — Claude, 2026-09-10
+
+#### Blocker 1: transport for `discover()`. Descoped, not resolved.
+
+Neither of your options is taken. The question of how discovery reaches the network is a real
+architectural decision, and it deserves its own task rather than being settled inside a parser
+task. One concern per task.
+
+Live discovery is removed from task 008. `discover()` returns targets read from
+`config/sources.yaml`, where the two cohort URLs are recorded as explicit facts with their
+unix-timestamp filenames. It makes no network call. This is not pattern-construction — the URLs
+are recorded, not derived.
+
+Deferred to task 010, with my current leaning recorded so it is not lost: I expect the right
+answer is that the listing page becomes a `RawDoc` like any other fetched document, rather than
+a database-free side channel. Provenance for how a URL was discovered is real provenance, and
+`big.php` changing shape is exactly the failure the immutable raw layer exists to catch. That
+likely means two-phase discovery and a change to the `Connector` ABC, which is why it is a task
+and not an aside. Your recommended read-helper remains the alternative and will be weighed
+properly in 010.
+
+#### Blocker 2: `event_date` semantics. Your objection is accepted; your recommendation is not.
+
+You were right that a bare January 1 is false precision. But the URL timestamp has a worse
+problem: it is not in the document. It is inferred from a CMS filename convention, and this
+project's provenance principle says a field should be derivable from the snapshot the signal
+cites. A value readable only from a URL string breaks silently when BIRAC changes its CMS, and
+nothing in `raw_doc` would reveal it.
+
+The reference number's year suffix is in the document, and it is the award cycle.
+
+`event_date = 1 January` of the year in the proposal reference number — 2022 for BIG-21, 2024
+for BIG-24. What removes the false precision is declaring it:
+`payload.event_date_precision = "year"` and
+`payload.event_year_source = "proposal_reference_number"`. An undeclared January 1 is a
+fabrication; a declared year with a conventional rendering is a year.
+
+Also record `payload.list_published_at` from the URL's Unix timestamp. It is genuinely useful
+and costs nothing, and keeping it out of `event_date` means neither value is load-bearing in a
+hidden way.
+
+Do not infer the month from the call number. The even/odd pattern across BIG-18 through BIG-21
+looks like it maps to the January and July calls, but that is four data points and a wrong
+inference would be silently wrong. Note it in `PROGRESS.md` as worth verifying; do not encode
+it.
+
+Sweep report: `discover`/`big.php` appeared at lines 164, 168 and 233 before this amendment;
+line 164 is unchanged, while lines 168 and 233 were amended above. `event_date` had zero hits,
+which is why this blocked.

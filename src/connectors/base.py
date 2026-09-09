@@ -41,6 +41,14 @@ class Connector(ABC):
     def parse(self, doc: RawDoc) -> Iterable[Signal]:
         """Pure function. RawDoc in, Signals out. No network. No DB. No I/O."""
 
+    @abstractmethod
+    def contract_raw_docs(self) -> Iterable[RawDoc]:
+        """Return immutable fixture documents used by cross-connector contract tests."""
+
+    @abstractmethod
+    def contract_signals(self) -> Iterable[Signal]:
+        """Return signals parsed from the connector's contract fixtures."""
+
 
 def _connector_classes(module: ModuleType) -> Iterable[type[Connector]]:
     for _, candidate in inspect.getmembers(module, inspect.isclass):

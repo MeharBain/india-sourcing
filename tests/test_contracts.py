@@ -96,19 +96,22 @@ def _registered_signal_rows() -> Iterable[tuple[Signal, RawDoc]]:
 
     for connector in REGISTERED_CONNECTORS:
         raw_docs = {raw_doc.id: raw_doc for raw_doc in connector.contract_raw_docs()}
-        for raw_doc in raw_docs.values():
-            with _pure_parse_boundary(connector):
-                signals = list(connector.parse(raw_doc))
-            for signal in signals:
-                resolved_raw_doc = raw_docs.get(signal.raw_doc_id)
-                assert resolved_raw_doc is not None, (
-                    f"raw_doc_id {signal.raw_doc_id} does not resolve"
-                )
-                yield signal, resolved_raw_doc
+        with _pure_parse_boundary(connector):
+            signals = list(connector.contract_signals())
+        for signal in signals:
+            resolved_raw_doc = raw_docs.get(signal.raw_doc_id)
+            assert resolved_raw_doc is not None, (
+                f"raw_doc_id {signal.raw_doc_id} does not resolve"
+            )
+            yield signal, resolved_raw_doc
 
 
 def test_every_registered_connector_returns_signals_with_reachable_provenance() -> None:
-    for signal, raw_doc in _registered_signal_rows():
+    rows = list(_registered_signal_rows())
+
+    assert any(connector.key == "birac_big" for connector in REGISTERED_CONNECTORS)
+    assert rows
+    for signal, raw_doc in rows:
         assert missing_provenance(signal, raw_doc) == ()
 
 
@@ -125,6 +128,31 @@ class _SideEffectConnector(Connector):
     def parse(self, doc: RawDoc) -> Iterable[Signal]:
         self.action()
         return []
+
+    def contract_raw_docs(self) -> Iterable[RawDoc]:
+        return []
+
+    def contract_signals(self) -> Iterable[Signal]:
+        return []
+
+
+class _MissingContractFixturesConnector(Connector):
+    key = "missing_contract_fixtures"
+    cadence = "weekly"
+
+    def discover(self) -> Iterable[FetchTarget]:
+        return []
+
+    def parse(self, doc: RawDoc) -> Iterable[Signal]:
+        return []
+
+
+def test_connector_missing_contract_fixtures_fails_clearly() -> None:
+    with pytest.raises(
+        TypeError,
+        match=r"abstract methods? 'contract_raw_docs', 'contract_signals'",
+    ):
+        _MissingContractFixturesConnector()
 
 
 @pytest.mark.parametrize(

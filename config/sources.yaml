@@ -11,9 +11,12 @@ sources:
     name: BIRAC Biotechnology Ignition Grant awardees
     tier: 1
     status: green
-    verified: false
+    verified: true
     base_url: https://birac.nic.in/
-    listing_pattern: "birac.nic.in/desc_new.php?id=<n>  (per-cohort landing pages)"
+    listing_url: https://birac.nic.in/big.php
+    artifact_urls:
+      - https://birac.nic.in/webcontent/1676014626_Final_list_of_BIG_21_Awardees.pdf
+      - https://birac.nic.in/webcontent/1759752792_big_24_awardees.pdf
     artifact_format: pdf
     confirmed_cohorts: [BIG-16, BIG-17, BIG-18, BIG-21, BIG-22, BIG-23, BIG-24]
     latest_seen: BIG-24 (published approx Oct 2025)

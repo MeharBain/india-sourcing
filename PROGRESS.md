@@ -432,3 +432,60 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - None.
+
+---
+
+## 2026-09-10 — task 008 BIRAC BIG connector
+
+**Branch / commits:** task/008-birac-big-connector, this commit
+**Prompt used:** `docs/tasks/008-birac-big-connector.md`
+
+**Changed**
+- Added the first real connector with committed BIG-21 and BIG-24 PDFs, golden summaries,
+  table-layout invariants, five applicant signal types, provisional flags, and complete signal
+  provenance.
+- Recorded the authoritative listing URL and two explicit artifact URLs in `sources.yaml`, and
+  added the eight observed BIRAC partner prefixes to `incubators.yaml`.
+- Made offline discovery return only configured artifact URLs; live listing-page discovery and
+  its provenance are deferred to task 010.
+- Declared `contract_raw_docs()` and `contract_signals()` abstract. Abstract methods were chosen
+  instead of empty defaults so a registered connector cannot silently evade contract coverage;
+  omission now fails clearly at instantiation.
+- Added `pdfplumber` for real PDF text/table geometry and `PyYAML` for authoritative source and
+  incubator configuration rather than hardcoding either mapping.
+
+**Tests proving it**
+- Parser tests were written before parser implementation. The meaningful initial run stopped
+  during collection with `ImportError: cannot import name 'BiracBigConnector'`; after
+  implementation, the focused suite passes.
+- Real-fixture tests verify both SHA-256 hashes, all ten hand-transcribed rows, reference and
+  partner invariants, per-category serial continuity, BIG-21 section counts, complete names,
+  score presence by cohort, classification, provisional status, event-date precision, schema
+  conformance, and exact configured discovery targets.
+- `tests/test_contracts.py` now parses 102 signals from the real connector inside the purity
+  boundary and verifies reachable provenance; missing contract fixtures raise at instantiation.
+- Pre-change `uv run pytest` — 53 passed. Post-change `uv run pytest` — 73 passed.
+- `uv run ruff check .` — all checks passed.
+
+**Behavioural/proxy disclosure**
+- PDF tests execute the real committed snapshots through `pdfplumber`; they prove parser
+  behaviour for BIG-21 and BIG-24 rather than a source-text proxy.
+- The discovery test proves that `discover()` returns exactly the two configured URLs and opens
+  no socket. It does not prove live `big.php` availability or layout compatibility; live
+  listing discovery was removed from this task and deferred to task 010.
+
+**Cohort-layout surprises**
+- None beyond the verified document structure. `pdfplumber` exposes some non-hyphenated BIG-21
+  references as `BIG-` followed by a line break; the parser removes that layout hyphen as
+  required by the hand-verified references.
+- The apparent even/odd BIG call-number pattern may correspond to January/July calls and is
+  worth verifying with more cohorts. It is not encoded in event dates or payloads.
+
+**Unfinished**
+- Task 010 must decide and implement provenance-preserving live listing discovery.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None.
