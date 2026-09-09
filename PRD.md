@@ -1,8 +1,8 @@
 # PRD: India Pre-Seed Sourcing Tracker
 
-**Status:** Draft v0.1
+**Status:** Draft v0.2
 **Owner:** TBD
-**Last updated:** 2026-09-01
+**Last updated:** 2026-09-09
 
 ---
 
@@ -13,10 +13,14 @@ non-obvious public sources: government grant programmes, institutional incubator
 filings and corporate registry data. It surfaces a ranked weekly shortlist and a review
 queue rather than a searchable database.
 
-The product bet is **lead time**. Incumbents cover companies after incorporation, after a
-website, after press. The grant and patent layer is visible 9 to 18 months earlier, but it
-is fragmented across dozens of PDF-publishing government and academic sites that nobody has
-bothered to consolidate.
+The product bet is **lead time**, and the measured lead time is far longer than first
+assumed. Incumbents cover companies after incorporation, after a website, after press.
+Grant and incubator records make Indian deeptech companies visible **five to thirteen
+years** before their first institutional round — see `docs/FEASIBILITY_TEST.md`. Detection
+is therefore not the hard problem. Ranking is: at any moment roughly eight BIRAC BIG
+cohorts are simultaneously live, and only an estimated 10–20% of grantees ever raise
+institutional equity. The product's value is in identifying which of a persistent
+watchlist are approaching a raise.
 
 **Non-goal:** being a comprehensive Indian startup database. That market is taken and the
 buyer already pays for it.
@@ -315,17 +319,21 @@ registry / traction are five families. Two incubator listings is one family.
 This is the single most important component. It is what makes the system better than
 reading any one source directly.
 
-### Component: timing (max 15 pts)
+### Component: readiness (max 15 pts) — DISABLED, weight 0
 
-Months elapsed since the strongest funding-clock signal (BIG, NIDHI-SSS, PRAYAS, TIH).
+This component previously scored months elapsed since the funding-clock signal, peaking at
+12–20 months. That curve was built on the assumption of a 9-to-18-month lead time and is
+refuted by `docs/FEASIBILITY_TEST.md`. A company four years past its BIG grant may be at
+exactly the right moment.
 
-| Months since | Points | Rationale |
-|---|---|---|
-| 0–6 | 4 | Too early, money hasn't run out |
-| 7–11 | 10 | Warming up |
-| 12–20 | 15 | Peak window |
-| 21–30 | 8 | Probably already raising or raised |
-| 30+ | 2 | Stale |
+**Weight is 0 until a readiness model is built from data.** Maximum achievable score is
+therefore 85, not 100. Do not redistribute these points to other components; doing so
+would silently inflate every score.
+
+The readiness signals to model, from worked case 2 in the feasibility document, are
+regulatory clearances arriving (CDSCO, US FDA, CE), first published clinical study,
+distributor or partner networks appearing, and headcount inflection. None are currently
+in `config/sources.yaml` above Tier 3. Building this is a future task.
 
 ### Component: IP depth (max 10 pts)
 
@@ -349,8 +357,13 @@ company outside the thesis should score low, not medium.
 ### Suppressors (hard)
 
 - Already raised institutional seed or later → suppress from digest, keep in graph
-- Incorporated over 4 years ago with no signal in the last 24 months → suppress
-- Sole director, no team, no signal in 18 months → suppress
+- No signal of any kind in the last 36 months → suppress
+- Sole director, no team, and no signal in 36 months → suppress
+
+The former suppressor "incorporated over 4 years ago with no signal in the last 24
+months" has been **removed**. It would have suppressed Ayati Devices, which raised its
+first institutional round 7.5 years after incorporation and is the strongest validating
+case found. Company age is not evidence of anything in Indian deeptech.
 
 ---
 
@@ -420,9 +433,11 @@ The four triage actions are the labelled dataset. Do not collapse them into a si
 
 ## 12. Success metrics
 
-**The metric that matters: median lead time.** Months between the system's first signal on
-a company and that company's first publicly announced institutional round. Target: median
-of 9 months or better on a validation set.
+**The metric that matters: precision on the readiness ranking.** Of the top 10 companies
+surfaced in a weekly digest, how many raise institutional capital within 18 months?
+
+Lead time is no longer the headline metric. It is measured at five to thirteen years and
+is not the constraint. Detection is solved; ranking is not.
 
 Supporting metrics:
 

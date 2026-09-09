@@ -1,5 +1,18 @@
 # PROGRESS
 
+## Current position
+
+The repository has its project scaffold, hosted-Postgres schema and initial migration,
+immutable raw-document storage and provenance enforcement, and the connector contract,
+registry, and failure-isolating orchestrator. No concrete connector is registered yet. The
+next task is the first real BIRAC BIG connector, which is blocked until the real BIG-24 and
+BIG-21 PDFs and hand-verified expected JSON fixtures are committed; live fetching also remains
+disabled until a real contact address is configured locally. The former 9-to-18-month product
+bet is now rejected: three cases show five to thirteen years from incorporation to first
+institutional round. What remains contested is the small evidence base, the estimated 10–20%
+institutional-raise rate for BIG grantees, and which later signals can support a reliable
+readiness ranking.
+
 Session state for this project. Codex reads this at the start of every session and appends to
 it at the end. Do not delete history — the log is the point.
 
@@ -20,7 +33,8 @@ web-capable agent. Codex is not involved until Day 6.
 
 | Gate | Status | Notes |
 |---|---|---|
-| Lead-time test: 15+/20 with meaningful lead | not started | Governs whether the project proceeds at all |
+| Lead-time test: 15+/20 with meaningful lead | complete | n=3 found a five-to-thirteen-year gap from incorporation to first institutional round; detection has ample lead but readiness ranking is the constraint. |
+| Readiness model validated against first institutional equity rounds | not started | The former timing component is disabled at weight 0 until this is built from data. |
 | Fixtures committed for BIG-24 and BIG-21 | not started | BIG-24 confirmed fetchable and text-extractable |
 | MCA bulk snapshot freshness verified | not started | Read "as on 30 June 2025" on 2026-09-01. If genuinely stale, watchlist design changes. |
 | Vertical slice usable on real data (Day 14) | not started | The real gate. Do not build more connectors before this. |
@@ -280,3 +294,39 @@ web-capable agent. Codex is not involved until Day 6.
 - ADR-014: v1 focuses on bio and medtech because BIRAC BIG is the strongest available signal;
   broader deeptech sectors are sequenced after validation without changing the sector-agnostic
   architecture.
+
+---
+
+## 2026-09-10 — task 005 product reconciliation
+
+**Branch / commits:** task/005-product-reconciliation, this commit
+**Prompt used:** `docs/tasks/005-product-reconciliation.md`
+
+**Changed**
+- Committed the feasibility findings and established `docs/tasks/` as the task-specification
+  convention.
+- Reframed the product around readiness ranking after measured five-to-thirteen-year lead
+  times, disabled the unsupported timing curve at weight 0, and removed company-age
+  suppression.
+- Recorded ADR-015 through ADR-018, marked the kickoff guide historical, added task workflow
+  instructions, and refreshed the project position and gates.
+
+**Tests proving it**
+- `uv run pytest` — 50 passed, unchanged from task 004.
+- `uv run ruff check .` — all checks passed.
+
+**Unfinished**
+- The readiness model remains intentionally unbuilt and disabled pending a data-backed future
+  task.
+- The first BIRAC BIG connector still needs committed real PDFs and hand-verified golden
+  outputs before parser work can begin.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-015: measured lead time is five to thirteen years, not nine to eighteen months.
+- ADR-016: readiness scoring stays at weight 0 until it can be fit from sufficient data.
+- ADR-017: individual and faculty BIG awards create an incorporation watchlist with a known
+  founder and 18-month window.
+- ADR-018: validation-set inclusion follows first institutional equity, never company age.

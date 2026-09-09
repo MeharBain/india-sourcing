@@ -1,5 +1,9 @@
 # Kickoff: first three weeks, and exactly what to give Codex
 
+**HISTORICAL — superseded 2026-09-09.** The numbered prompts below describe tasks 001–004,
+which are complete. They are retained as a record of how the project was bootstrapped.
+**Tasks now live in `docs/tasks/`.** Do not take instructions from this file.
+
 Read `PRD.md` and `AGENTS.md` first. `config/sources.yaml` has the verified source findings.
 
 The governing rule for everything below: **Codex writes parsers well only when it can see the

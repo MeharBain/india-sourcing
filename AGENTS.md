@@ -244,6 +244,21 @@ Fixed facts about this machine and project. Do not deviate or "helpfully" upgrad
 
 ---
 
+## Tasks
+
+Work is specified in `docs/tasks/NNN-slug.md`. Read `docs/tasks/README.md` for the
+convention before starting any task.
+
+- Implement against the task's acceptance criteria. Do not expand scope beyond them.
+- Report against each criterion individually on completion: met, not met, or partially
+  met, with specific evidence. Partially met is an acceptable answer.
+- A product or architecture question known before you act is a **blocker**, not an
+  assumption. Follow the blocker protocol in `docs/tasks/README.md`: append to the task
+  file, set status blocked, commit the task file alone to `main`, and stop.
+- `docs/CODEX_KICKOFF.md` is historical. Do not take instructions from it.
+
+---
+
 ## Git operations
 
 You run git in this repository. The human does not. Accordingly:

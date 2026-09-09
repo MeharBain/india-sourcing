@@ -174,3 +174,51 @@ spend effort on weaker signals without first validating the product premise.
 **To reverse:** Validate the bio and medtech thesis with the agreed feasibility evidence, or
 produce equivalent evidence that another sector's sources offer a stronger reason to change
 the sequencing. Reversal changes source priority, not the sector-agnostic architecture.
+
+## ADR-015: Lead time is five to thirteen years
+
+**Decision:** Treat the observed lead time from incorporation to first institutional round as
+five to thirteen years, not nine to eighteen months.
+
+**Reason:** The feasibility cases span Innovodigm at approximately five years, Ayati Devices
+at 7.5 years, and Bioscan Research at approximately nine to thirteen years. The evidence
+invalidates the former short-window product assumption even though the sample remains small.
+
+**To reverse:** Produce a larger, date-grounded validation set showing that first institutional
+rounds consistently occur on a materially shorter timeline for the in-scope companies.
+
+## ADR-016: Readiness scoring remains disabled until it is data-backed
+
+**Decision:** Disable the former timing component at weight 0 rather than re-tuning it. The
+maximum achievable score is 85, and the unused 15 points are not redistributed.
+
+**Reason:** Three observed cases are insufficient to fit a readiness curve, and a wrong curve
+is worse than none. Redistributing the points would also inflate every score and break
+comparability with earlier results.
+
+**To reverse:** Build and validate a readiness model from a sufficiently large set of companies
+with known first institutional equity rounds, then introduce it as an explicit model version.
+
+## ADR-017: Individual BIG awards predict incorporation
+
+**Decision:** Treat individual and faculty BIRAC BIG awardees as a near-deterministic
+incorporation watchlist with a known founder name and an 18-month window.
+
+**Reason:** Individual and faculty awardees are contractually required to incorporate within
+the 18-month BIG grant term. This makes targeted monitoring for the named founder's new company
+the product's most defensible feature rather than a speculative identity guess.
+
+**To reverse:** BIRAC must remove or materially weaken the incorporation obligation, or measured
+awardee outcomes must show that it does not reliably predict incorporation within the term.
+
+## ADR-018: Validation is anchored on first institutional equity
+
+**Decision:** Determine inclusion in every validation set by whether the round is the company's
+first institutional equity round, never by company age.
+
+**Reason:** Age filters reject exactly the slow-maturing Indian deeptech companies the tracker
+exists to find. Ayati Devices first raised institutional capital 7.5 years after incorporation
+and would have been incorrectly excluded by the former five-year filter.
+
+**To reverse:** Show that company age independently predicts an out-of-scope opportunity after
+controlling for prior institutional equity, without excluding relevant slow-maturing companies.
