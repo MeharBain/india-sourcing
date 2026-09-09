@@ -158,3 +158,19 @@ possible.
 association or another auditable identity-assignment mechanism, migrate existing assignments
 without losing their history, and update the Resolve boundary before tightening the trigger to
 reject every signal update.
+
+## ADR-014: V1 focuses on bio and medtech
+
+**Decision:** Narrow v1 source coverage and thesis validation to bio and medtech. Defer
+defence, space, materials, and semiconductor coverage until the bio thesis is validated,
+while keeping the architecture sector-agnostic so those sectors can be added later without a
+redesign.
+
+**Reason:** BIRAC BIG is the strongest available early-stage signal and is specific to
+biotechnology. A positive feasibility result in the sector with the best signal would justify
+further build and later expansion; attempting broad deeptech coverage before that result would
+spend effort on weaker signals without first validating the product premise.
+
+**To reverse:** Validate the bio and medtech thesis with the agreed feasibility evidence, or
+produce equivalent evidence that another sector's sources offer a stronger reason to change
+the sequencing. Reversal changes source priority, not the sector-agnostic architecture.

@@ -232,3 +232,51 @@ web-capable agent. Codex is not involved until Day 6.
 **Decisions promoted to docs/DECISIONS.md**
 - None. The corrected reachable-provenance contract is recorded in `AGENTS.md` and
   `docs/CODEX_KICKOFF.md` and does not change the approved schema.
+
+---
+
+## 2026-09-09 — task 04 connector contract
+
+**Branch / commits:** task/04-connector-contract, this commit
+**Prompt used:** kickoff prompt 4
+
+**Changed**
+- Recorded the v1 bio and medtech scope sequence while preserving a sector-agnostic
+  architecture.
+- Implemented the exact connector ABC, URL fetch targets, and automatic discovery of concrete
+  connector subclasses.
+- Implemented orchestration through the shared storage fetcher, detached raw-document handoff
+  to pure parsers, centralized signal persistence, and per-connector failure isolation.
+- Stored structured source health with a consecutive-failure count, diagnostic exception
+  details, and reset-on-success behavior.
+
+**Tests proving it**
+- `tests/test_orchestrator.py::test_registry_discovers_concrete_connector_subclasses` — a
+  concrete connector in a synthetic package is found and instantiated automatically.
+- `tests/test_orchestrator.py::test_discover_failure_does_not_stop_other_connectors_and_records_health`
+  — a discovery exception records failed health while the next connector persists its signal.
+- `tests/test_orchestrator.py::test_parse_failure_does_not_stop_other_connectors_and_records_health`
+  — a parse exception records failed health while the next connector persists its signal.
+- `tests/test_orchestrator.py::test_three_consecutive_failures_are_distinguishable_from_one`
+  — structured health preserves consecutive failure counts of one and three distinctly.
+- `tests/test_contracts.py::test_parse_purity_boundary_rejects_network_database_and_clock_reads`
+  — parser execution rejects explicit network, session, and clock probes.
+- `uv run pytest` — 50 passed.
+- `uv run ruff check .` — all checks passed.
+
+**Unfinished**
+- The connector registry remains empty until prompt 5 supplies the first real connector.
+
+**Assumptions I had to make because the spec didn't say**
+- `source.health_status` stores compact JSON so status, consecutive failure count, exception
+  type, and message remain distinguishable without an unrequested schema change; a successful
+  run resets the count to zero.
+- Concrete connector classes have no-argument constructors so automatic registry discovery can
+  instantiate them.
+- `FetchTarget` carries only a URL because the shared storage fetch contract currently accepts
+  no target-specific request metadata.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-014: v1 focuses on bio and medtech because BIRAC BIG is the strongest available signal;
+  broader deeptech sectors are sequenced after validation without changing the sector-agnostic
+  architecture.
