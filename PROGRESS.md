@@ -402,3 +402,33 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - None.
+
+---
+
+## 2026-09-10 — task 009 process fixes to the task convention
+
+**Branch / commits:** task/009-task-convention-fixes, this commit
+**Prompt used:** `docs/tasks/009-task-convention-fixes.md`
+
+**Changed**
+- Made pushing the task-only blocker commit an explicit, mandatory blocker-protocol step.
+- Required every specification amendment to include and report a whole-file sweep for the
+  changed terms.
+- Distinguished proxy tests from behavioural coverage and required completion reports to say
+  what each proxy proves, what it does not prove, and how real behaviour was verified.
+
+**Tests proving it**
+- Exact-text and section-order checks cover every task-009 wording requirement.
+- `git diff --name-only` lists only `docs/tasks/README.md` and `PROGRESS.md` among tracked
+  changes.
+- `uv run pytest` — 53 passed.
+- `uv run ruff check .` — all checks passed.
+
+**Unfinished**
+- A repeatable Postgres integration suite remains intentionally out of scope until CI exists.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None.

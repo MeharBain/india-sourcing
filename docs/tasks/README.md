@@ -86,12 +86,16 @@ something needing a product or architecture decision, the task file itself is th
 1. Codex appends to the **Blockers and questions** section of the task file: what it hit, what
    it needs decided, and the options it can see with a recommendation.
 2. Codex sets `Status: blocked`.
-3. Codex commits **only the task file** directly to `main`. Documentation commits to `main` are
-   permitted by `AGENTS.md`; the code stays on the task branch, untouched.
+3. Codex commits **only the task file** directly to `main` **and pushes it**. Documentation
+   commits to `main` are permitted by `AGENTS.md`; the code stays on the task branch,
+   untouched. Pushing is not optional — an unpushed blocker is invisible to the human's
+   sync and therefore invisible to Claude, which defeats the protocol.
 4. Codex stops work on that task.
 5. The human syncs the repository context.
 6. Claude sees the blocker on `main`, decides, and amends the task file.
-7. Codex pulls `main`, reads the decision, sets `Status: in progress`, and resumes.
+7. Claude, having amended the task file, sweeps that file for every term the amendment
+   touched, in the same edit. See "Amending a specification" below.
+8. Codex pulls `main`, reads the decision, sets `Status: in progress`, and resumes.
 
 This means a blocked task is visible to Claude without merging unfinished code, and the
 question and its answer both end up in version control next to the work.
@@ -99,6 +103,26 @@ question and its answer both end up in version control next to the work.
 **Codex must never resolve a product or architecture question by choosing for itself and
 noting it as an assumption.** Assumptions in `PROGRESS.md` are for gaps discovered after the
 fact. A question known at the time is a blocker.
+
+---
+
+## Amending a specification
+
+Whenever a task specification is amended — by Claude resolving a blocker, or by anyone
+correcting an error — the amendment is not complete until the whole file has been searched
+for the term that changed.
+
+Both blockers raised so far had this same cause. Task 006: criterion 1's status vocabulary
+was corrected to match the implementation while criteria 4 and 6 kept the old values, so a
+CHECK constraint built from criterion 1 would have rejected what criteria 4 and 6 required.
+Task 007: `PRD.md` section 8 was replaced correctly while section 9 kept describing the
+component that had just been deleted.
+
+Exact-text criteria verify precisely what they name and are blind to everything that
+depends on it. The sweep is what closes that gap.
+
+Report the sweep with the amendment: which term, which lines matched, what was done with
+each.
 
 ---
 
@@ -142,6 +166,27 @@ not a judgement call. Stop and follow the blocker protocol.
 **Corrections are always fix-forward.** Add a commit, or `git revert` a merged one. Never
 rewrite pushed history — `AGENTS.md` forbids it, and a rebased `main` silently invalidates
 every synced context Claude holds.
+
+---
+
+## Behavioural tests and proxy tests
+
+`conftest.py` blocks all network access, so some behaviour cannot be proven in the default
+suite. A test may then verify a **proxy** rather than the behaviour itself.
+
+Two exist today. `tests/test_migration_protections.py` asserts the migration file *defines*
+the immutability triggers, not that they fire. The task-006 CHECK constraint test runs
+against in-memory SQLite while production is Postgres.
+
+Both are reasonable. Neither is coverage. Real behaviour was confirmed manually against
+Neon, once, in a way nothing repeats.
+
+Any task adding a proxy test must say so in its completion report, naming what is proven,
+what is not, and how the real behaviour was verified. A proxy test presented as coverage is
+a false green, and false greens are worse than absent tests because they stop anyone
+looking.
+
+These belong in an integration suite excluded from the default run, once CI exists.
 
 ---
 
