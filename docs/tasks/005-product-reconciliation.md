@@ -182,3 +182,7 @@ Nothing else. Any other file changing means something has gone wrong.
 - **Doc-only tasks feel low-stakes and get skimmed.** Two of these criteria remove rules that
   would actively suppress good companies. This is a correctness change wearing documentation
   clothing.
+
+---
+
+## Blockers and questions
