@@ -32,6 +32,7 @@ class Connector(ABC):
 
     key: str
     cadence: Cadence
+    extractor_version: str
 
     @abstractmethod
     def discover(self) -> Iterable[FetchTarget]:

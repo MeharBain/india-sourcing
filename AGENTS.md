@@ -71,6 +71,7 @@ Every connector subclasses `Connector` and implements exactly this interface:
 class Connector(ABC):
     key: str                      # matches a key in config/sources.yaml
     cadence: Cadence
+    extractor_version: str
 
     @abstractmethod
     def discover(self) -> Iterable[FetchTarget]:

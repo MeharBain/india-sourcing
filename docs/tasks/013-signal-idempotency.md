@@ -1,6 +1,6 @@
 # 013 — Signal idempotency across runs
 
-**Status:** blocked
+**Status:** complete
 **Branch:** task/013-signal-idempotency
 **Depends on:** 011 merged.
 
@@ -33,7 +33,8 @@ The reasoning is that `raw_doc` deduplication already proves the bytes are ident
 bytes and the extractor version are both unchanged, the resulting signals are necessarily
 identical, so re-parsing produces nothing new. One query answers it.
 
-1. Before calling `parse()`, the orchestrator checks whether signals already exist for
+1. Before calling `parse()`, the orchestrator reads `connector.extractor_version` (a class
+   attribute) and checks whether signals already exist for
    `(raw_doc_id, extractor_version)`. If so, it skips that document and records the skip.
 2. Skips are reported in the run summary — skipped documents are not failures and must not
    touch `source.health_status` or `consecutive_failures`.
@@ -83,7 +84,13 @@ Record it, do not fix it, and add the constraint below to `PROGRESS.md` open que
 4. A test proves that changing `extractor_version` causes the document to be parsed again,
    demonstrating the skip is keyed on version and not on `raw_doc_id` alone.
 
-5. The run summary reports documents parsed and documents skipped separately.
+4a. A test asserts that every `Signal` returned by `parse()` carries an `extractor_version`
+    equal to the connector's declared class attribute. Without this drift guard, the attribute
+    and parser constant can diverge, the skip keys on a version no signal carries, and
+    idempotency silently stops working while every other test stays green.
+
+5. `run_connectors()` returns `RunSummary`, and the CLI reports parsed and skipped separately
+   from it. Assert the returned values in a test, not just printed output.
 
 6. **Against Neon**, run the CLI twice and report `signal` row counts after each. State whether
    duplicate signals already exist in the database from task 011's testing, and if so how many.
@@ -99,6 +106,14 @@ Record it, do not fix it, and add the constraint below to `PROGRESS.md` open que
 8. `PROGRESS.md` open questions gains the supersession constraint quoted in scope above, worded
    so a future session cannot miss it.
 
+8a. **ADR-021** — `extractor_version` is declared connector metadata, not solely an artifact of
+    parsing. Reason: the orchestrator must know a document's parse version before deciding to
+    parse it, and a value reachable only through `parse()` cannot inform whether to call
+    `parse()`. State reversal conditions.
+
+8b. `AGENTS.md`'s connector contract code block gains `extractor_version: str` beside `key` and
+    `cadence`.
+
 9. `uv run pytest` and `uv run ruff check .` pass. Report counts before and after.
 
 10. `PROGRESS.md` session entry.
@@ -109,9 +124,14 @@ Record it, do not fix it, and add the constraint below to `PROGRESS.md` open que
 
 ```
 src/connectors/orchestrator.py    skip check and run summary
+src/connectors/base.py            extractor_version connector metadata
+src/connectors/birac_big/connector.py    BIRAC extractor version declaration
+src/cli.py                        reports the returned run summary
 tests/test_orchestrator.py        idempotency, version-bump, and skip-health coverage
 PRD.md                            section 10 idempotency bullet
 PROGRESS.md                       session entry and supersession constraint
+AGENTS.md                         connector contract documentation
+docs/DECISIONS.md                 ADR-021
 ```
 
 ---
@@ -162,3 +182,30 @@ specify another source of pre-parse extractor-version metadata. The amendment sh
 whether the new run summary is a returned aggregate value (recommended, e.g. immutable
 `RunSummary(documents_parsed, documents_skipped)`) or log/output-only reporting; the current
 `run_connectors()` returns `None` and no summary contract exists.
+
+### Decision — Claude, 2026-09-10
+
+Option 1 approved. Correct blocker; criterion 1 was unimplementable as written. Specific shape:
+
+`Connector` gains a class attribute `extractor_version: str`, declared alongside `key` and
+`cadence`. This is additive metadata of exactly the same kind as the two already there, no
+method signature changes.
+
+`BiracBigConnector.extractor_version` is set from the existing `EXTRACTOR_VERSION` constant in
+`parser.py`, not restated as a second literal. One source of truth.
+
+Option 2 rejected. A callable where a constant suffices, to support document-dependent versions
+no connector needs. `AGENTS.md` forbids abstraction layers for hypothetical cases and asks for
+three concrete connectors before generalising. Add it when a second connector genuinely
+requires it.
+
+Option 3 rejected, as stated above — it defeats the purpose.
+
+Run summary recommendation approved. `run_connectors()` returns a frozen dataclass
+`RunSummary(documents_parsed, documents_skipped, signals_persisted, connectors_failed)`. The CLI
+reports from it rather than counting separately.
+
+Amendment sweep: `extractor_version` at original lines 37, 46, 50, 56, 74, 83 and 96 — all
+remain correct; the concept is unchanged and only its source becomes explicit. `run summary` at
+original lines 38, 86 and 111 — line 86 was amended above, while lines 38 and 111 are
+unaffected.

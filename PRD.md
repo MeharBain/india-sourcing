@@ -408,8 +408,10 @@ The four triage actions are the labelled dataset. Do not collapse them into a si
   faster is wasted compute and rate-limit risk.
 - **Source health monitoring:** every connector reports success/failure per run. Three
   consecutive failures escalates to the digest and to a direct alert.
-- **Idempotency:** re-running the pipeline over the same raw docs must produce identical
-  output. Content hashing enforces this.
+- **Idempotency:** re-running the pipeline over unchanged sources must add nothing. Two
+  mechanisms enforce this: content hashing deduplicates `raw_doc`, and the orchestrator
+  skips parsing any raw document already parsed at the current `extractor_version`. Neither
+  alone is sufficient — content hashing does not prevent a second parse of the same bytes.
 - **Politeness:** respect robots.txt, rate-limit to one request per two seconds per domain,
   identify with a real user agent and contact address.
 - **Cost ceiling:** LLM spend under $50/month at v1 volumes. Achieved by using

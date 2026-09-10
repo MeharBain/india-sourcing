@@ -11,7 +11,7 @@ from uuid import NAMESPACE_URL, uuid5
 import yaml
 
 from src.connectors.base import Connector, FetchTarget
-from src.connectors.birac_big.parser import parse_big_awardees
+from src.connectors.birac_big.parser import EXTRACTOR_VERSION, parse_big_awardees
 from src.core.models import RawDoc, Signal
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -31,6 +31,7 @@ class BiracBigConnector(Connector):
 
     key = "birac_big"
     cadence = "per_call"
+    extractor_version = EXTRACTOR_VERSION
 
     def __init__(
         self,

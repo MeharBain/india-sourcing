@@ -117,9 +117,21 @@ def test_every_registered_connector_returns_signals_with_reachable_provenance() 
         assert missing_provenance(signal, raw_doc) == ()
 
 
+def test_every_registered_connector_emits_its_declared_extractor_version() -> None:
+    rows = list(_registered_signal_rows())
+
+    assert rows
+    for connector_key, signal, _ in rows:
+        connector_class = next(
+            connector for connector in REGISTERED_CONNECTORS if connector.key == connector_key
+        )
+        assert signal.extractor_version == connector_class.extractor_version
+
+
 class _SideEffectConnector(Connector):
     key = "side_effect_probe"
     cadence = "weekly"
+    extractor_version = "side-effect-probe-v1"
 
     def __init__(self, action: Callable[[], object]) -> None:
         self.action = action
@@ -141,6 +153,7 @@ class _SideEffectConnector(Connector):
 class _MissingContractFixturesConnector(Connector):
     key = "missing_contract_fixtures"
     cadence = "weekly"
+    extractor_version = "missing-contract-fixtures-v1"
 
     def discover(self) -> Iterable[FetchTarget]:
         return []

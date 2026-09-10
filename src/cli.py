@@ -21,7 +21,7 @@ from src.connectors.birac_big.connector import (
     BiracBigConnector,
 )
 from src.connectors.orchestrator import run_connectors
-from src.core.models import RawDoc, Signal, Source, Tenant
+from src.core.models import RawDoc, Source, Tenant
 from src.core.storage import DEFAULT_STORAGE_DIR, ingest_bytes
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -76,8 +76,8 @@ def _seed_tenant(session: Session, name: str) -> Tenant:
     return tenant
 
 
-def _count_for_source(session: Session, model: type[RawDoc | Signal], source_id: UUID) -> int:
-    statement = select(func.count()).select_from(model).where(model.source_id == source_id)
+def _raw_doc_count(session: Session, source_id: UUID) -> int:
+    statement = select(func.count()).select_from(RawDoc).where(RawDoc.source_id == source_id)
     return int(session.exec(statement).one())
 
 
@@ -93,8 +93,7 @@ def run_offline_ingestion(
     with Session(engine) as session:
         source = _seed_source(session)
         _seed_tenant(session, tenant_name)
-        raw_docs_before = _count_for_source(session, RawDoc, source.id)
-        signals_before = _count_for_source(session, Signal, source.id)
+        raw_docs_before = _raw_doc_count(session, source.id)
 
         def fixture_fetcher(*, url: str, source_id: UUID, session: Session) -> RawDoc:
             fixture_name = FIXTURE_BY_URL.get(url)
@@ -109,7 +108,7 @@ def run_offline_ingestion(
                 storage_dir=storage_dir,
             )
 
-        run_connectors(
+        summary = run_connectors(
             session=session,
             connectors=[BiracBigConnector],
             fetcher=fixture_fetcher,
@@ -117,11 +116,13 @@ def run_offline_ingestion(
 
         session.expire_all()
         source = session.exec(select(Source).where(Source.key == "birac_big")).one()
-        raw_docs_created = _count_for_source(session, RawDoc, source.id) - raw_docs_before
-        signals_created = _count_for_source(session, Signal, source.id) - signals_before
+        raw_docs_created = _raw_doc_count(session, source.id) - raw_docs_before
 
         print(f"raw_doc rows created: {raw_docs_created}")
-        print(f"signal rows created: {signals_created}")
+        print(f"documents parsed: {summary.documents_parsed}")
+        print(f"documents skipped: {summary.documents_skipped}")
+        print(f"signal rows created: {summary.signals_persisted}")
+        print(f"connectors failed: {summary.connectors_failed}")
         print(f"birac_big health_status: {source.health_status}")
         print(f"birac_big consecutive_failures: {source.consecutive_failures}")
         return 0 if source.health_status == "healthy" else 1

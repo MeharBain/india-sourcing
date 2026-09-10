@@ -13,29 +13,61 @@ from uuid import UUID, uuid4
 import pytest
 
 from src.connectors.base import Connector, FetchTarget, discover_connectors
-from src.connectors.orchestrator import run_connectors
+from src.connectors.birac_big.connector import BiracBigConnector
+from src.connectors.orchestrator import RunSummary, run_connectors
 from src.core.models import RawDoc, Signal, Source
 
 
 class _Result:
-    def __init__(self, value: Source | None) -> None:
+    def __init__(self, value: object | None) -> None:
         self.value = value
 
     def one_or_none(self) -> Source | None:
+        assert self.value is None or isinstance(self.value, Source)
+        return self.value
+
+    def first(self) -> object | None:
         return self.value
 
 
 class FakeSession:
-    def __init__(self, sources: Iterable[Source]) -> None:
+    def __init__(
+        self,
+        sources: Iterable[Source],
+        signals: Iterable[Signal] = (),
+    ) -> None:
         self.sources = {source.key: source for source in sources}
-        self.signals: list[Signal] = []
+        self.signals = list(signals)
         self.commits = 0
         self.rollbacks = 0
 
     def exec(self, statement: Any) -> _Result:
         params = statement.compile().params
-        key = next(value for name, value in params.items() if name.startswith("key_"))
-        return _Result(self.sources.get(key))
+        key = next(
+            (value for name, value in params.items() if name.startswith("key_")),
+            None,
+        )
+        if key is not None:
+            return _Result(self.sources.get(key))
+
+        raw_doc_id = next(
+            value for name, value in params.items() if name.startswith("raw_doc_id_")
+        )
+        extractor_version = next(
+            value
+            for name, value in params.items()
+            if name.startswith("extractor_version_")
+        )
+        matching_signal = next(
+            (
+                signal.id
+                for signal in self.signals
+                if signal.raw_doc_id == raw_doc_id
+                and signal.extractor_version == extractor_version
+            ),
+            None,
+        )
+        return _Result(matching_signal)
 
     def add(self, instance: object) -> None:
         if isinstance(instance, Signal):
@@ -75,6 +107,8 @@ def _raw_doc(source_id: UUID, url: str) -> RawDoc:
 
 
 class _FixtureConnector(Connector):
+    extractor_version = "test-v1"
+
     def contract_raw_docs(self) -> Iterable[RawDoc]:
         return []
 
@@ -143,6 +177,16 @@ def _fetcher(*, url: str, source_id: UUID, session: object) -> RawDoc:
     return _raw_doc(source_id, url)
 
 
+def _fixed_fetcher(raw_doc: RawDoc) -> Any:
+    def fetcher(*, url: str, source_id: UUID, session: object) -> RawDoc:
+        del session
+        assert url == raw_doc.url
+        assert source_id == raw_doc.source_id
+        return raw_doc
+
+    return fetcher
+
+
 def test_registry_discovers_concrete_connector_subclasses(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -156,6 +200,7 @@ def test_registry_discovers_concrete_connector_subclasses(
         "class ExampleConnector(Connector):\n"
         "    key = 'example'\n"
         "    cadence = 'weekly'\n"
+        "    extractor_version = 'example-v1'\n"
         "    def __init__(self):\n"
         "        raise RuntimeError('must not instantiate during registration')\n"
         "    def discover(self):\n"
@@ -188,6 +233,7 @@ def test_registry_rejects_empty_class_key_without_instantiating(
         "class EmptyKeyConnector(Connector):\n"
         "    key = '   '\n"
         "    cadence = 'weekly'\n"
+        "    extractor_version = 'empty-key-v1'\n"
         "    def __init__(self):\n"
         "        raise RuntimeError('must not instantiate during validation')\n"
         "    def discover(self):\n"
@@ -221,6 +267,7 @@ def test_registry_rejects_duplicate_class_keys_without_instantiating(
         "class {class_name}(Connector):\n"
         "    key = 'duplicate'\n"
         "    cadence = 'weekly'\n"
+        "    extractor_version = 'duplicate-v1'\n"
         "    def __init__(self):\n"
         "        raise RuntimeError('must not instantiate during validation')\n"
         "    def discover(self):\n"
@@ -342,7 +389,7 @@ def test_construction_failure_does_not_stop_other_connectors_and_records_health(
     good = _source(GoodConnector.key)
     session = FakeSession([failed, good])
 
-    run_connectors(
+    summary = run_connectors(
         session=session,
         connectors=[ConstructionFailureConnector, GoodConnector],
         fetcher=_fetcher,
@@ -352,3 +399,116 @@ def test_construction_failure_does_not_stop_other_connectors_and_records_health(
     assert failed.health_status == "failed"
     assert failed.consecutive_failures == 3
     assert failed.last_error == "scoring config malformed"
+    assert summary == RunSummary(1, 0, 1, 1)
+
+
+def test_running_real_birac_fixtures_twice_keeps_exactly_102_signals() -> None:
+    source = _source(BiracBigConnector.key)
+    connector = BiracBigConnector()
+    raw_docs = {
+        raw_doc.url: raw_doc.model_copy(update={"source_id": source.id})
+        for raw_doc in connector.contract_raw_docs()
+    }
+    session = FakeSession([source])
+
+    def fetcher(*, url: str, source_id: UUID, session: object) -> RawDoc:
+        del session
+        raw_doc = raw_docs[url]
+        assert source_id == raw_doc.source_id
+        return raw_doc
+
+    first = run_connectors(
+        session=session,
+        connectors=[BiracBigConnector],
+        fetcher=fetcher,
+    )
+
+    assert len(session.signals) == 102
+    assert first == RunSummary(
+        documents_parsed=2,
+        documents_skipped=0,
+        signals_persisted=102,
+        connectors_failed=0,
+    )
+
+    second = run_connectors(
+        session=session,
+        connectors=[BiracBigConnector],
+        fetcher=fetcher,
+    )
+
+    assert len(session.signals) == 102
+    assert second == RunSummary(
+        documents_parsed=0,
+        documents_skipped=2,
+        signals_persisted=0,
+        connectors_failed=0,
+    )
+
+
+def test_skipped_document_is_successful_without_losing_source_health() -> None:
+    class SkipConnector(GoodConnector):
+        key = "skip"
+        parse_calls = 0
+
+        def parse(self, doc: RawDoc) -> Iterable[Signal]:
+            type(self).parse_calls += 1
+            return super().parse(doc)
+
+    source = _source(SkipConnector.key)
+    source.health_status = "healthy"
+    previous_success = datetime(2026, 9, 8, tzinfo=UTC)
+    source.last_success_at = previous_success
+    raw_doc = _raw_doc(source.id, "https://good.example/awards.pdf")
+    existing_signal = GoodConnector().parse(raw_doc)[0]
+    successful_at = datetime(2026, 9, 10, tzinfo=UTC)
+    session = FakeSession([source], [existing_signal])
+
+    summary = run_connectors(
+        session=session,
+        connectors=[SkipConnector],
+        fetcher=_fixed_fetcher(raw_doc),
+        now=lambda: successful_at,
+    )
+
+    assert SkipConnector.parse_calls == 0
+    assert source.health_status == "healthy"
+    assert source.consecutive_failures == 0
+    assert source.last_success_at == previous_success
+    assert source.last_success_at is not None
+    assert summary == RunSummary(0, 1, 0, 0)
+
+
+def test_new_extractor_version_parses_an_already_processed_document() -> None:
+    class VersionedConnector(GoodConnector):
+        key = "versioned"
+
+        def parse(self, doc: RawDoc) -> Iterable[Signal]:
+            signal = super().parse(doc)[0]
+            signal.extractor_version = self.extractor_version
+            return [signal]
+
+    source = _source(VersionedConnector.key)
+    raw_doc = _raw_doc(source.id, "https://good.example/awards.pdf")
+    session = FakeSession([source])
+
+    first = run_connectors(
+        session=session,
+        connectors=[VersionedConnector],
+        fetcher=_fixed_fetcher(raw_doc),
+    )
+    VersionedConnector.extractor_version = "test-v2"
+    second = run_connectors(
+        session=session,
+        connectors=[VersionedConnector],
+        fetcher=_fixed_fetcher(raw_doc),
+    )
+
+    assert first.documents_parsed == 1
+    assert second.documents_parsed == 1
+    assert second.documents_skipped == 0
+    assert second.signals_persisted == 1
+    assert [signal.extractor_version for signal in session.signals] == [
+        "test-v1",
+        "test-v2",
+    ]

@@ -51,6 +51,8 @@ web-capable agent. Codex is not involved until Day 6.
 5. Trigger behavior is currently verified only by manual Neon runs because `pytest-socket`
    blocks database access. Add a separate integration test suite, excluded from the default
    test run, when CI is set up.
+6. **Do not bump any `extractor_version` until supersession exists.** Doing so silently doubles
+   the signals for every affected document.
 
 ## Assumptions not yet validated
 
@@ -694,3 +696,68 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - None. No data-model invariant changed.
+
+---
+
+## 2026-09-10 — task 013 signal idempotency
+
+**Branch / commits:** `main` blocker commit `7e32be5`; `task/013-signal-idempotency`, this commit
+**Prompt used:** `docs/tasks/013-signal-idempotency.md`, including the approved blocker amendment
+
+**Changed**
+- Added approved class-level `Connector.extractor_version` metadata and bound
+  `BiracBigConnector.extractor_version` to the parser's existing `EXTRACTOR_VERSION` constant.
+- Added a pre-parse `(raw_doc_id, extractor_version)` existence check. Previously parsed
+  documents are skipped without mutating source health; a new version parses and appends new
+  signals without updating or deleting old facts.
+- Made `run_connectors()` return the frozen `RunSummary(documents_parsed, documents_skipped,
+  signals_persisted, connectors_failed)` and changed the offline CLI to report those values
+  instead of independently counting signals.
+- Corrected the PRD idempotency guarantee, added ADR-021, documented the connector attribute in
+  `AGENTS.md`, and added the supersession constraint to the open questions above.
+- Preserved the original blocker and appended Claude's decision. The amendment sweep covered
+  every `extractor_version` and run-summary occurrence recorded in the decision; the concept
+  stayed unchanged and only its pre-parse source became explicit.
+
+**Tests proving it**
+- Test-first focused collection failed because `RunSummary` did not exist. After implementation,
+  the focused orchestrator and contract suite passes 17 tests.
+- `test_running_real_birac_fixtures_twice_keeps_exactly_102_signals` runs both committed PDFs:
+  the first summary is `(2 parsed, 0 skipped, 102 persisted, 0 failed)` and the second is
+  `(0 parsed, 2 skipped, 0 persisted, 0 failed)`, with 102 signals after each run.
+- `test_skipped_document_is_successful_without_losing_source_health` proves `parse()` is not
+  called and an all-skipped run preserves `health_status`, `consecutive_failures`, and
+  `last_success_at` exactly.
+- `test_new_extractor_version_parses_an_already_processed_document` proves changing from
+  `test-v1` to `test-v2` parses the same raw document again and persists the new-version signal.
+- `test_every_registered_connector_emits_its_declared_extractor_version` is the automatic drift
+  guard: all 102 real BIRAC signals equal their connector's declared version.
+- The construction-failure isolation test now also asserts summary values, including one
+  connector failure alongside one successfully persisted signal.
+- Pre-change `uv run pytest` — 88 passed. Post-change `uv run pytest` — 92 passed.
+- `uv run ruff check .` — all checks passed before and after.
+
+**Neon idempotency run**
+- Before the final runs, Neon held 102 `birac-big-v2` signals and zero duplicate rows beyond a
+  first occurrence when grouped by raw document, version, type, event date, payload and
+  confidence. Task 011 testing had not created a duplicate set.
+- First final-code CLI run: 0 raw documents created, 0 documents parsed, 2 skipped, 0 signals
+  persisted, 0 connectors failed; the SQL count afterwards remained 102 with zero duplicates.
+- Second final-code CLI run reported the same summary; the SQL count again remained 102 with
+  zero duplicates. No signal or raw-document rows were updated or deleted.
+
+**Behavioural/proxy disclosure**
+- The orchestrator tests are behavioral: they run the real committed BIRAC fixtures through
+  parsing and persistence doubles with network blocked. The Neon CLI runs directly proved the
+  production PostgreSQL existence query and end-to-end skip behavior. No proxy test was added.
+
+**Unfinished**
+- Signal supersession remains deliberately unimplemented. Do not bump a production extractor
+  version until a separate reviewed schema design can distinguish current from stale signals.
+
+**Assumptions I had to make because the spec didn't say**
+- None after the blocker decision.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-021: extractor version is connector metadata available before parsing, and emitted
+  signals must carry the same identity.

@@ -254,3 +254,16 @@ without recording the failure on its source row or allowing healthy connectors t
 initialization failures inside a per-source boundary, records each failure against the correct
 source row, and continues running healthy connectors before allowing registration to construct
 instances again.
+
+## ADR-021: Extractor version is connector metadata
+
+**Decision:** Declare `extractor_version` on each connector as class-level metadata, while
+requiring every emitted signal to carry the same value.
+
+**Reason:** The orchestrator must know a raw document's current parse version before deciding
+whether to parse it. A version reachable only through `parse()` cannot inform whether to call
+`parse()`, so it cannot prevent duplicate signals from unchanged bytes and unchanged code.
+
+**To reverse:** Replace the class attribute only with another deterministic version identity
+that is available before parsing, supports the `(raw_doc_id, extractor_version)` idempotency
+check, and guarantees that persisted signals carry the same identity.

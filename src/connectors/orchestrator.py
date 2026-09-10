@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol
 from uuid import UUID
@@ -30,6 +31,16 @@ class Fetcher(Protocol):
 Now = Callable[[], datetime]
 
 
+@dataclass(frozen=True, slots=True)
+class RunSummary:
+    """Aggregate committed work and isolated failures from one connector run."""
+
+    documents_parsed: int
+    documents_skipped: int
+    signals_persisted: int
+    connectors_failed: int
+
+
 def _utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -41,7 +52,26 @@ def _source_for_connector(session: Session, connector_key: str) -> Source:
     return source
 
 
-def _validate_signal(signal: Signal, source: Source, raw_docs: dict[UUID, RawDoc]) -> None:
+def _was_parsed(
+    session: Session,
+    raw_doc_id: UUID,
+    extractor_version: str,
+) -> bool:
+    existing_signal_id = session.exec(
+        select(Signal.id).where(
+            Signal.raw_doc_id == raw_doc_id,
+            Signal.extractor_version == extractor_version,
+        ).limit(1)
+    ).first()
+    return existing_signal_id is not None
+
+
+def _validate_signal(
+    signal: Signal,
+    source: Source,
+    raw_docs: dict[UUID, RawDoc],
+    extractor_version: str,
+) -> None:
     if signal.company_id is not None:
         raise ValueError("Connectors must not set signal.company_id")
     if signal.source_id != source.id:
@@ -49,6 +79,10 @@ def _validate_signal(signal: Signal, source: Source, raw_docs: dict[UUID, RawDoc
     raw_doc = raw_docs.get(signal.raw_doc_id)
     if raw_doc is None or raw_doc.source_id != source.id:
         raise ValueError("Connector returned a signal without a fetched source RawDoc")
+    if signal.extractor_version != extractor_version:
+        raise ValueError(
+            "Connector returned a signal whose extractor_version differs from its declaration"
+        )
 
 
 def run_connectors(
@@ -57,7 +91,7 @@ def run_connectors(
     connectors: Iterable[type[Connector]] | None = None,
     fetcher: Fetcher = storage.fetch,
     now: Now = _utc_now,
-) -> None:
+) -> RunSummary:
     """Run each connector independently and persist its signals or failure health."""
 
     if connectors is None:
@@ -65,6 +99,10 @@ def run_connectors(
 
         connectors = REGISTERED_CONNECTORS
 
+    documents_parsed = 0
+    documents_skipped = 0
+    signals_persisted = 0
+    connectors_failed = 0
     for connector_class in connectors:
         source: Source | None = None
         try:
@@ -80,22 +118,37 @@ def run_connectors(
                 )
                 raw_docs.append(persisted_doc.model_copy())
             raw_docs_by_id = {raw_doc.id: raw_doc for raw_doc in raw_docs}
-            signals = [
-                signal
-                for raw_doc in raw_docs
-                for signal in connector.parse(raw_doc)
-            ]
-            for signal in signals:
-                _validate_signal(signal, source, raw_docs_by_id)
+            signals = []
+            connector_documents_parsed = 0
+            connector_documents_skipped = 0
+            for raw_doc in raw_docs:
+                if _was_parsed(session, raw_doc.id, connector.extractor_version):
+                    connector_documents_skipped += 1
+                    continue
+                parsed_signals = list(connector.parse(raw_doc))
+                for signal in parsed_signals:
+                    _validate_signal(
+                        signal,
+                        source,
+                        raw_docs_by_id,
+                        connector.extractor_version,
+                    )
+                signals.extend(parsed_signals)
+                connector_documents_parsed += 1
 
             session.add_all(signals)
-            source.health_status = "healthy"
-            source.consecutive_failures = 0
-            source.last_success_at = now()
-            session.add(source)
+            if connector_documents_parsed or not connector_documents_skipped:
+                source.health_status = "healthy"
+                source.consecutive_failures = 0
+                source.last_success_at = now()
+                session.add(source)
             session.commit()
+            documents_parsed += connector_documents_parsed
+            documents_skipped += connector_documents_skipped
+            signals_persisted += len(signals)
         except Exception as error:
             session.rollback()
+            connectors_failed += 1
             logger.exception("Connector %s failed", connector_class.key)
             if source is None:
                 continue
@@ -105,3 +158,10 @@ def run_connectors(
             source.last_failure_at = now()
             session.add(source)
             session.commit()
+
+    return RunSummary(
+        documents_parsed=documents_parsed,
+        documents_skipped=documents_skipped,
+        signals_persisted=signals_persisted,
+        connectors_failed=connectors_failed,
+    )
