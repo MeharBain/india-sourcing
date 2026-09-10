@@ -909,3 +909,71 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - None. Task 015 and ADR-022 had already settled the classification-review design.
+
+---
+
+## 2026-09-10 — task 016 signal-to-person symmetry
+
+**Branch / commits:** `task/016-signal-person-id`, this commit
+**Prompt used:** `docs/tasks/016-signal-person-id.md`
+
+**Changed**
+- Added nullable, indexed `signal.person_id` with a foreign key to `person.id` and the named
+  `ck_signal_single_entity` CHECK: `company_id IS NULL OR person_id IS NULL`.
+- Added migration `9d6f1e2a4b80`, based on `5a3e7b1c9d02`, without editing an applied migration.
+  It adds the column, foreign key, index and CHECK and replaces `signal_append_only` so both
+  resolution-owned entity links remain mutable while fact columns remain protected.
+- Person resolution now sets `signal.person_id` as well as creating the existing watchlist row;
+  company resolution sets `company_id`, and all unresolved paths clear both links.
+- Added the idempotent `backfill-person-ids` CLI operation, which copies person links from
+  `watchlist.awarding_signal_id` and rejects a contradictory existing company link.
+- Reworded the `AGENTS.md` labelled-fixture rule so the task that introduces fuzzy matching must
+  create `tests/fixtures/resolution_pairs.json`; exact normalized-name matching does not claim a
+  nonexistent accuracy set.
+- Amended ADR-013 to make `company_id` and `person_id` the two mutually exclusive,
+  resolution-owned signal mutations. ADR-005 and ADR-006 received matching terminology updates
+  so the connector and schema decisions do not contradict the amended invariant.
+
+**Tests proving it**
+- Pre-change `uv run pytest` — 113 passed. The test-first focused run failed at collection because
+  `backfill_signal_person_ids` did not exist. Post-change `uv run pytest` — 117 passed.
+- Model coverage proves `person_id` is nullable, indexed and references `person.id`, and executes
+  the exact CHECK expression against a small relational proxy that rejects both links together.
+- Trigger coverage derives the protected-column list from the new migration, proves a
+  `person_id` update succeeds, and proves a `signal_type` update raises.
+- Resolution coverage proves a confident person gets both `signal.person_id` and a watchlist row,
+  classification-review overrides populate the reviewed class's entity link, and pending or
+  undecidable reviews leave both links empty.
+- Backfill coverage proves one missing link is filled on the first run and zero on the second.
+- `uv run ruff check .` — all checks passed before and after.
+- `uv run alembic check` against the final Neon head — no new upgrade operations detected.
+
+**Neon migration round-trip and behavior**
+- Started at `5a3e7b1c9d02`, upgraded to `9d6f1e2a4b80`, downgraded to `5a3e7b1c9d02`, then
+  upgraded again to `9d6f1e2a4b80 (head)`. After downgrade, `person_id` was absent and the original
+  trigger was restored; the final upgrade restored the column and revised trigger.
+- After upgrade, `person_id` was nullable UUID, `ix_signal_person_id`,
+  `fk_signal_person_id_person`, and `ck_signal_single_entity` were present. The trigger protected
+  `id`, `signal_type`, `source_id`, `event_date`, `payload`, `raw_doc_id`, `confidence`,
+  `extractor_version`, and `created_at`; both `company_id` and `person_id` were absent.
+- Rolled-back production probes updated `person_id` successfully, rejected a `signal_type` update
+  with SQLSTATE 55000, and rejected both entity links with `ck_signal_single_entity`.
+- The live backfill updated 25 rows on its first run and 0 on its second. Every watchlist person's
+  ID matched the awarding signal's new `person_id`.
+- Final signal counts were `(company_id, person_id, neither, both) = (65, 25, 12, 0)`.
+- Two resolution runs each considered 102 signals and created zero companies, people, aliases,
+  watchlist rows or classification reviews; counts stayed `(65, 25, 12, 0)` throughout.
+
+**Behavioural/proxy disclosure**
+- Default-suite trigger and CHECK tests execute migration-derived behavior on SQLite proxies.
+  Rolled-back Neon probes separately proved the actual PostgreSQL trigger and CHECK behavior.
+
+**Unfinished**
+- Fuzzy matching, blocking, scoring, parser/classifier/orchestrator changes, and creation of the
+  future fuzzy-resolution labelled fixture remain intentionally out of scope.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-013 amended in place; no new ADR was added.

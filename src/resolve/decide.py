@@ -104,12 +104,14 @@ def resolve_signals(
             reviews_by_signal[signal.id] = review
             reviews_created += 1
             signal.company_id = None
+            signal.person_id = None
             continue
 
         effective_class = parsed_class
         if review is not None:
             if review.status in {"pending", "undecidable"}:
                 signal.company_id = None
+                signal.person_id = None
                 continue
             if review.status != "resolved" or review.resolved_class is None:
                 raise ValueError(
@@ -123,6 +125,7 @@ def resolve_signals(
             raise ValueError(f"Signal {signal.id} applicant name normalizes to an empty value")
 
         if effective_class in _COMPANY_CLASSES:
+            signal.person_id = None
             company = companies_by_name.get(normalized_name)
             if company is None and signal.company_id is not None:
                 company = companies_by_id.get(signal.company_id)
@@ -171,10 +174,12 @@ def resolve_signals(
                 session.add(watchlist)
                 watchlist_by_signal[signal.id] = watchlist
                 watchlist_created += 1
+            signal.person_id = person.id
             continue
 
         if effective_class == "ambiguous":
             signal.company_id = None
+            signal.person_id = None
             continue
 
         raise ValueError(f"Unsupported resolved applicant class: {effective_class!r}")
@@ -188,3 +193,26 @@ def resolve_signals(
         watchlist_rows_created=watchlist_created,
         classification_reviews_created=reviews_created,
     )
+
+
+def backfill_signal_person_ids(*, session: Session) -> int:
+    """Attach existing watchlisted person resolutions directly to their signals."""
+    signals_by_id = {
+        signal.id: signal for signal in session.exec(select(Signal)).all()
+    }
+    watchlist_rows = list(session.exec(select(Watchlist)).all())
+    updated = 0
+
+    for watchlist in watchlist_rows:
+        signal = signals_by_id[watchlist.awarding_signal_id]
+        if signal.company_id is not None:
+            raise ValueError(
+                f"Watchlisted signal {signal.id} already resolves to company {signal.company_id}"
+            )
+        if signal.person_id == watchlist.person_id:
+            continue
+        signal.person_id = watchlist.person_id
+        updated += 1
+
+    session.commit()
+    return updated

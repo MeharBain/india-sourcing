@@ -52,8 +52,8 @@ access model that prevents cross-tenant leakage or data loss.
 ## ADR-005: Connectors do not own persistence or entity assignment
 
 **Decision:** Connectors only discover fetch targets and transform a `RawDoc` into `Signal`
-objects. They never access the database and never set `signal.company_id`; the orchestrator
-persists results and the Resolve layer assigns canonical entities.
+objects. They never access the database and never set `signal.company_id` or `signal.person_id`;
+the orchestrator persists results and the Resolve layer assigns canonical entities.
 
 **Reason:** Pure parsers are deterministic and golden-testable, while centralized persistence
 keeps source failures isolated. Entity identity requires evidence across sources and therefore
@@ -63,15 +63,18 @@ cannot be decided correctly inside one connector.
 per-source failure isolation, and full provenance without connector-owned persistence or
 identity guesses.
 
-## ADR-006: Unresolved signals retain a nullable company identifier
+## ADR-006: Unresolved signals retain nullable entity identifiers
 
-**Decision:** Keep `signal.company_id` nullable until entity resolution runs.
+**Decision:** Keep `signal.company_id` and `signal.person_id` nullable until entity resolution
+runs, and permit at most one to be non-null.
 
-**Reason:** Signals can exist before a company is known, and some belong initially to a person
-or ambiguous applicant. Premature attachment would turn an uncertain match into a stored fact.
+**Reason:** Signals can exist before either canonical entity is known, and some belong initially
+to a person or ambiguous applicant. Premature or dual attachment would turn an uncertain match
+into a stored fact.
 
-**To reverse:** Every source must provide a canonical company identifier at extraction time, or
-the schema must gain a more general unresolved-entity representation preserving uncertainty.
+**To reverse:** Every source must provide one canonical entity identifier at extraction time, or
+the schema must gain a more general unresolved-entity representation preserving uncertainty and
+exclusive assignment.
 
 ## ADR-007: Human review history is separate from computed scores
 
@@ -145,19 +148,19 @@ applicant, or a validated classifier must eliminate ambiguity without reducing a
 
 **Decision:** Enforce `raw_doc` immutability and `signal` append-only behavior with database
 triggers. Every signal fact and provenance column is immutable after insertion, and signal
-rows cannot be deleted. `signal.company_id` is the single permitted signal mutation and is
-owned exclusively by `resolve/`, which may assign or revise the canonical company link without
-rewriting the sourced fact.
+rows cannot be deleted. `signal.company_id` and `signal.person_id` are the two permitted signal
+mutations and are owned exclusively by `resolve/`, which may assign or revise one canonical
+entity link without rewriting the sourced fact.
 
 **Reason:** A blanket signal update prohibition would prevent entity resolution even though
-the unresolved signal must exist before its company is known. Restricting mutation to the
-resolution-owned foreign key preserves auditable source facts while keeping re-resolution
-possible.
+the unresolved signal must exist before its company or person is known. Restricting mutation to
+the two mutually exclusive, resolution-owned foreign keys preserves auditable source facts while
+keeping re-resolution possible.
 
-**To reverse:** Replace `signal.company_id` mutation with a separately versioned resolution
-association or another auditable identity-assignment mechanism, migrate existing assignments
-without losing their history, and update the Resolve boundary before tightening the trigger to
-reject every signal update.
+**To reverse:** Replace `signal.company_id` and `signal.person_id` mutation with a separately
+versioned resolution association or another auditable identity-assignment mechanism, migrate
+existing assignments without losing their history, and update the Resolve boundary before
+tightening the trigger to reject every signal update.
 
 ## ADR-014: V1 focuses on bio and medtech
 

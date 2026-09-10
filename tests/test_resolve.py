@@ -15,7 +15,7 @@ from src.core.models import (
     Signal,
     Watchlist,
 )
-from src.resolve.decide import resolve_signals
+from src.resolve.decide import backfill_signal_person_ids, resolve_signals
 from src.resolve.normalize import normalize_name
 
 
@@ -121,6 +121,7 @@ def test_resolution_creates_entities_watchlist_and_cross_cohort_match() -> None:
         ("Dr. Asha Rao", "dr asha rao")
     ]
     assert [row.awarding_signal_id for row in session.rows[Watchlist]] == [person.id]
+    assert person.person_id == session.rows[Person][0].id
     assert {(row.signal_id, row.reason) for row in session.rows[ClassificationReview]} == {
         (low_confidence.id, "low_confidence"),
         (ambiguous.id, "ambiguous_class"),
@@ -162,6 +163,7 @@ def test_resolved_review_overrides_signal_type() -> None:
     assert [person.full_name for person in session.rows[Person]] == ["Dr. Maya Sen"]
     assert [row.awarding_signal_id for row in session.rows[Watchlist]] == [signal.id]
     assert signal.company_id is None
+    assert signal.person_id == session.rows[Person][0].id
 
 
 def test_pending_and_undecidable_reviews_create_nothing_or_requeue() -> None:
@@ -188,5 +190,18 @@ def test_pending_and_undecidable_reviews_create_nothing_or_requeue() -> None:
     assert session.rows[Person] == []
     assert session.rows[Watchlist] == []
     assert session.rows[ClassificationReview] == [pending, undecidable]
+    assert pending_signal.person_id is None
+    assert undecidable_signal.person_id is None
     assert first.classification_reviews_created == 0
     assert second.classification_reviews_created == 0
+
+
+def test_backfill_sets_signal_person_id_from_watchlist_once() -> None:
+    signal = _signal("Dr. Asha Rao", "person", 0.95)
+    person = Person(full_name="Dr. Asha Rao", normalized_name="dr asha rao")
+    watchlist = Watchlist(person_id=person.id, awarding_signal_id=signal.id)
+    session = _FakeSession(signal, person, watchlist)
+
+    assert backfill_signal_person_ids(session=session) == 1
+    assert signal.person_id == person.id
+    assert backfill_signal_person_ids(session=session) == 0

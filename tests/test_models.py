@@ -6,9 +6,12 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import (
     CheckConstraint,
+    Column,
     DateTime,
     Integer,
+    MetaData,
     String,
+    Table,
     Text,
     UniqueConstraint,
     create_engine,
@@ -75,6 +78,54 @@ def test_signal_company_id_is_nullable() -> None:
     assert {foreign_key.target_fullname for foreign_key in company_id.foreign_keys} == {
         "company.id"
     }
+
+
+def test_signal_person_id_is_nullable_indexed_person_foreign_key() -> None:
+    person_id = _table("signal").c.person_id
+
+    assert person_id.nullable is True
+    assert person_id.index is True
+    assert {foreign_key.target_fullname for foreign_key in person_id.foreign_keys} == {
+        "person.id"
+    }
+
+
+def test_signal_rejects_company_and_person_links_together() -> None:
+    signal_table = _table("signal")
+    entity_constraint = next(
+        constraint
+        for constraint in signal_table.constraints
+        if isinstance(constraint, CheckConstraint)
+        and constraint.name == "ck_signal_single_entity"
+    )
+    assert str(entity_constraint.sqltext) == "company_id IS NULL OR person_id IS NULL"
+
+    metadata = MetaData()
+    proxy = Table(
+        "signal",
+        metadata,
+        Column("id", String, primary_key=True),
+        Column("company_id", String),
+        Column("person_id", String),
+        CheckConstraint(
+            str(entity_constraint.sqltext),
+            name=entity_constraint.name,
+        ),
+    )
+    engine = create_engine("sqlite://")
+    metadata.create_all(engine)
+
+    with (
+        pytest.raises(IntegrityError, match="ck_signal_single_entity"),
+        engine.begin() as connection,
+    ):
+        connection.execute(
+            proxy.insert().values(
+                id="signal-1",
+                company_id="company-1",
+                person_id="person-1",
+            )
+        )
 
 
 def test_watchlist_links_person_to_awarding_signal() -> None:
