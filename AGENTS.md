@@ -267,23 +267,28 @@ convention before starting any task.
 
 ## Agent dispatch
 
-This project uses the subagents in `.codex/agents/`. See `docs/AGENT_ARCHITECTURE.md`.
+This project uses the subagents in `.codex/agents/`. Read `docs/CONTEXT.md` and
+`docs/AGENT_ARCHITECTURE.md` before any substantial work.
 
-Given a feature request, delegate rather than implementing directly:
+**Default behaviour: any feature request runs the orchestrator cycle.** Do not
+implement a feature directly, and do not wait to be told to delegate. Act as
+orchestrator per `docs/AGENT_ARCHITECTURE.md` and run:
 
-- Authoring a spec → `spec-writer`
-- Auditing a spec before implementation → `spec-auditor` (never skip)
-- Implementing an approved spec → `implementer`, one task, own branch, own worktree
-- Reviewing a branch → `reviewer`, given only the task file path and branch name,
-  never the implementer's completion report
-- Fetching external artifacts or research → `researcher`
+Stage 0 intake → Stage 1 `spec-writer` then `spec-auditor` → **stop at Gate 1 for
+human spec approval** → Stage 2 `implementer` → Stage 3 `reviewer`, given only the
+task path and branch → Stage 4 adjudicate against the quality gates → Stage 5 merge.
 
-Two human gates: spec approval, and merge approval for high-risk changes only
-(`src/core/models.py`, `migrations/`, `src/connectors/base.py`, ADR amendments,
-any threshold or weight). Those same paths also require dual review.
+- `reviewer` never receives the implementer's completion report
+- Never review work you dispatched
+- Never resolve a product question — escalate it, per the boundary in
+  `docs/AGENT_ARCHITECTURE.md`
+- Dual review and a Gate 2 merge approval are required for `src/core/models.py`,
+  anything under `migrations/`, `src/connectors/base.py`, ADR amendments, and any
+  threshold or weight. Everything else merges autonomously.
 
-Never review work you dispatched. Never resolve a product question — escalate it,
-per the boundary in `docs/AGENT_ARCHITECTURE.md`.
+**Exceptions, which must be stated explicitly:** resuming a blocked task, a one-off
+research request, or a direct instruction to skip a stage. Absent those, run the
+full cycle.
 
 ---
 
