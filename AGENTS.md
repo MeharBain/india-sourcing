@@ -265,6 +265,28 @@ convention before starting any task.
 
 ---
 
+## Agent dispatch
+
+This project uses the subagents in `.codex/agents/`. See `docs/AGENT_ARCHITECTURE.md`.
+
+Given a feature request, delegate rather than implementing directly:
+
+- Authoring a spec → `spec-writer`
+- Auditing a spec before implementation → `spec-auditor` (never skip)
+- Implementing an approved spec → `implementer`, one task, own branch, own worktree
+- Reviewing a branch → `reviewer`, given only the task file path and branch name,
+  never the implementer's completion report
+- Fetching external artifacts or research → `researcher`
+
+Two human gates: spec approval, and merge approval for high-risk changes only
+(`src/core/models.py`, `migrations/`, `src/connectors/base.py`, ADR amendments,
+any threshold or weight). Those same paths also require dual review.
+
+Never review work you dispatched. Never resolve a product question — escalate it,
+per the boundary in `docs/AGENT_ARCHITECTURE.md`.
+
+---
+
 ## Git operations
 
 You run git in this repository. The human does not. Accordingly:
