@@ -127,7 +127,7 @@ class Person(SQLModel, table=True):
 
 
 class Signal(SQLModel, table=True):
-    """An append-only sourced fact awaiting or carrying company resolution."""
+    """An append-only sourced fact awaiting or carrying entity resolution."""
 
     __tablename__ = "signal"
     __table_args__ = (
@@ -135,10 +135,15 @@ class Signal(SQLModel, table=True):
             "confidence >= 0.0 AND confidence <= 1.0",
             name="ck_signal_confidence_range",
         ),
+        CheckConstraint(
+            "company_id IS NULL OR person_id IS NULL",
+            name="ck_signal_single_entity",
+        ),
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     company_id: UUID | None = Field(default=None, foreign_key="company.id", index=True)
+    person_id: UUID | None = Field(default=None, foreign_key="person.id", index=True)
     signal_type: str = Field(index=True)
     source_id: UUID = Field(foreign_key="source.id", index=True)
     event_date: date

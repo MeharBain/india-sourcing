@@ -89,8 +89,8 @@ Hard rules:
    This is what makes golden tests possible and re-parsing cheap.
 2. **Connectors never write to the database.** They return `Signal` objects. The pipeline
    orchestrator persists them. A connector that imports a session object is wrong.
-3. **Connectors never set `company_id`.** Entity resolution owns that. A connector that
-   guesses which company a signal belongs to is wrong.
+3. **Connectors never set `company_id` or `person_id`.** Entity resolution owns both. A
+   connector that guesses which canonical entity a signal belongs to is wrong.
 4. **Every `Signal` carries provenance.** Directly, as columns: `raw_doc_id`, `source_id`,
    `event_date`, `extractor_version`, `confidence`. There is a CI test that fails the build if
    any signal is missing these. Do not work around it.
@@ -161,7 +161,8 @@ Violating these requires a `docs/DECISIONS.md` entry and explicit approval.
 - `raw_doc` is **immutable**. Never update, never delete. Re-fetching produces a new row.
 - `signal` is **append-only**. Parsers get corrected by writing new signals with a bumped
   `extractor_version` and marking the old ones superseded. Never `UPDATE` a signal's payload.
-- `signal.company_id` is nullable and only written by `resolve/`.
+- `signal.company_id` and `signal.person_id` are nullable and only written by `resolve/`; at
+  most one may be non-null.
 - `review_event` is **never overwritten by automated processes**. Scores recompute; human
   judgement does not.
 - Every **tenant-scoped** table (`score`, `review_event`, and any future notes or status
@@ -187,8 +188,10 @@ Violating these requires a `docs/DECISIONS.md` entry and explicit approval.
 - Contract tests in `tests/test_contracts.py` run against every registered connector
   automatically. If you add a connector correctly, it is picked up with no test changes.
   If it fails there, the connector is wrong, not the test.
-- Entity resolution has a labelled test set in `tests/fixtures/resolution_pairs.json`.
-  Changes to `resolve/` must not regress accuracy on it. Report before and after numbers.
+- Exact normalized-name resolution does not yet have or require a labelled accuracy set. The
+  task that introduces fuzzy entity matching must create
+  `tests/fixtures/resolution_pairs.json`. From that task onward, changes to fuzzy resolution
+  must not regress accuracy on it and must report before and after numbers.
 - No network access in any test. `conftest.py` blocks it.
 
 ---

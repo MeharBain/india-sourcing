@@ -23,7 +23,7 @@ from src.connectors.birac_big.connector import (
 from src.connectors.orchestrator import run_connectors
 from src.core.models import RawDoc, Source, Tenant
 from src.core.storage import DEFAULT_STORAGE_DIR, ingest_bytes
-from src.resolve.decide import resolve_signals
+from src.resolve.decide import backfill_signal_person_ids, resolve_signals
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TENANT_NAME = "India sourcing"
@@ -156,12 +156,22 @@ def run_resolution() -> int:
     return 0
 
 
+def run_person_id_backfill() -> int:
+    """Backfill direct signal-to-person links from existing watchlist rows."""
+    engine = create_engine(_database_url())
+    with Session(engine) as session:
+        updated = backfill_signal_person_ids(session=session)
+
+    print(f"signal person_id rows updated: {updated}")
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
         nargs="?",
-        choices=("ingest", "resolve"),
+        choices=("ingest", "resolve", "backfill-person-ids"),
         default="ingest",
         help="pipeline operation to run (default: ingest)",
     )
@@ -183,6 +193,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "resolve":
         return run_resolution()
+    if args.command == "backfill-person-ids":
+        return run_person_id_backfill()
     return run_offline_ingestion(
         tenant_name=args.tenant_name,
         fetched_at=datetime.now(UTC),
