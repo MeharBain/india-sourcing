@@ -267,3 +267,22 @@ whether to parse it. A version reachable only through `parse()` cannot inform wh
 **To reverse:** Replace the class attribute only with another deterministic version identity
 that is available before parsing, supports the `(raw_doc_id, extractor_version)` idempotency
 check, and guarantees that persisted signals carry the same identity.
+
+## ADR-022: Signal classification review is global and signal-scoped
+
+**Decision:** Record human applicant-type classification in one global
+`classification_review` row per signal. A resolved review overrides `signal.signal_type` during
+resolution without mutating the signal; pending and undecidable reviews remain explicit queue
+outcomes.
+
+**Reason:** Whether a source applicant is a company, person, or ambiguous is shared entity-graph
+truth rather than tenant-specific workflow judgement, so duplicating it per tenant could produce
+contradictory canonical entities. Keeping the decision separate preserves ADR-001's append-only
+signal history, retains what the parser originally said for audit and accuracy measurement, and
+allows a human correction to apply to one row without pretending the parser changed globally.
+
+**To reverse:** Demonstrate that applicant classification legitimately differs by tenant, or
+replace the review row with another auditable, signal-scoped and version-preserving decision
+mechanism. Any replacement must migrate existing decisions without mutating sourced signal facts,
+must distinguish pending review from a completed but undecidable outcome, and must prevent
+different tenants from creating conflicting shared entities from the same signal.

@@ -761,3 +761,66 @@ web-capable agent. Codex is not involved until Day 6.
 **Decisions promoted to docs/DECISIONS.md**
 - ADR-021: extractor version is connector metadata available before parsing, and emitted
   signals must carry the same identity.
+
+---
+
+## 2026-09-10 — task 015 classification review schema
+
+**Branch / commits:** `task/015-classification-review-schema`, this commit
+**Prompt used:** `docs/tasks/015-classification-review-schema.md`
+
+**Changed**
+- Added the global, signal-scoped `ClassificationReview` model with one unique review per
+  signal, pending/resolved/undecidable workflow states, the two specified review reasons, and
+  ADR-012's five applicant classes.
+- Added migration `5a3e7b1c9d02` on top of prior head `c4b9e2d7a106`; neither existing migration
+  was edited.
+- Enforced resolution consistency with `(status = 'resolved' AND resolved_class IS NOT NULL AND
+  resolved_by IS NOT NULL AND resolved_at IS NOT NULL) OR (status <> 'resolved' AND
+  resolved_class IS NULL AND resolved_by IS NULL AND resolved_at IS NULL)`.
+- Added ADR-022 documenting global tenant scope, override-without-mutation behavior, and reversal
+  conditions.
+
+**Tests proving it**
+- Test-first focused collection failed because `ClassificationReview` did not yet exist. After
+  implementation, `tests/test_models.py` passes 17 tests.
+- `test_classification_review_schema_matches_contract` asserts the exact columns, nullability,
+  signal foreign key, pending default, four named CHECKs, no `tenant_id`, and unique signal key.
+- `test_classification_review_checks_reject_invalid_rows` covers bad status, reason and resolved
+  class plus resolved-without-decision and pending-with-decision in both directions of the
+  consistency rule.
+- `test_classification_review_signal_id_is_unique` proves a second review for one signal is
+  rejected.
+- `test_postgres_json_fields_use_jsonb` remains unchanged and still enumerates exactly four JSONB
+  columns.
+- Pre-change `uv run pytest` — 92 passed. Post-change `uv run pytest` — 99 passed.
+- `uv run ruff check .` — all checks passed before and after.
+- `uv run alembic check` against the final Neon head — no new upgrade operations detected.
+
+**Neon migration round-trip**
+- Neon began at `c4b9e2d7a106`. `alembic upgrade head` applied `5a3e7b1c9d02`.
+- `information_schema` showed the nine specified columns, timezone-aware `resolved_at` and
+  `created_at`, the pending and now defaults, the four named CHECKs, signal foreign key, primary
+  key, and `uq_classification_review_signal_id`. The row count was zero.
+- `alembic downgrade -1` returned to `c4b9e2d7a106`; `information_schema.tables` returned zero
+  matching tables. The final upgrade restored `5a3e7b1c9d02 (head)` with zero rows.
+- Transactional Neon probes rejected all five invalid CHECK cases under their expected names and
+  rejected the duplicate signal under `uq_classification_review_signal_id`. Every probe rolled
+  back and the final row count remained zero.
+
+**Behavioural/proxy disclosure**
+- Default-suite constraint tests execute behaviorally on SQLite, so they are a proxy for the
+  production PostgreSQL dialect. The named Postgres constraints were also exercised directly on
+  Neon inside rolled-back transactions, proving real rejection behavior without populating the
+  table.
+
+**Unfinished**
+- Populating classification reviews and reading resolved overrides remain intentionally deferred
+  to task 014. `src/resolve/` is unchanged.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-022: signal classification review is global, signal-scoped, and overrides rather than
+  mutates the parser's original classification.

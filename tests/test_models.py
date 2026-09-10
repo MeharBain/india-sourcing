@@ -1,5 +1,8 @@
 """Schema-level tests for the persistent data-model invariants."""
 
+from datetime import UTC, datetime
+from uuid import uuid4
+
 import pytest
 from sqlalchemy import (
     CheckConstraint,
@@ -13,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from src.core.models import Source, SQLModel
+from src.core.models import ClassificationReview, Source, SQLModel
 
 
 def _table(name: str):
@@ -34,6 +37,7 @@ def test_schema_contains_prd_tables_and_dual_spine() -> None:
         "score",
         "review_event",
         "watchlist",
+        "classification_review",
     }
 
     assert set(SQLModel.metadata.tables) == expected
@@ -174,3 +178,124 @@ def test_postgres_json_fields_use_jsonb() -> None:
 
     for table_name, column_name in json_columns:
         assert _table(table_name).c[column_name].type.__class__.__name__ == "JSONB"
+
+
+def _classification_review(**overrides: object) -> ClassificationReview:
+    values = {
+        "signal_id": uuid4(),
+        "reason": "ambiguous_class",
+    }
+    values.update(overrides)
+    return ClassificationReview(**values)
+
+
+def _classification_review_engine():
+    engine = create_engine("sqlite://")
+    ClassificationReview.__table__.create(engine)
+    return engine
+
+
+def test_classification_review_schema_matches_contract() -> None:
+    table = _table("classification_review")
+    columns = table.c
+
+    assert set(columns.keys()) == {
+        "id",
+        "signal_id",
+        "status",
+        "reason",
+        "resolved_class",
+        "resolved_by",
+        "resolved_at",
+        "notes",
+        "created_at",
+    }
+    assert "tenant_id" not in columns
+    assert {key.target_fullname for key in columns.signal_id.foreign_keys} == {
+        "signal.id"
+    }
+    assert columns.signal_id.nullable is False
+    assert str(columns.status.server_default.arg) == "pending"
+    assert columns.resolved_class.nullable is True
+    assert columns.resolved_by.nullable is True
+    assert columns.resolved_at.nullable is True
+    assert columns.notes.nullable is True
+    assert columns.created_at.nullable is False
+    assert columns.created_at.server_default is not None
+
+    check_names = {
+        constraint.name
+        for constraint in table.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+    assert check_names == {
+        "ck_classification_review_status",
+        "ck_classification_review_reason",
+        "ck_classification_review_resolved_class",
+        "ck_classification_review_resolution_consistency",
+    }
+    unique_columns = {
+        tuple(column.name for column in constraint.columns)
+        for constraint in table.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("signal_id",) in unique_columns
+
+
+@pytest.mark.parametrize(
+    ("overrides", "constraint_name"),
+    [
+        ({"status": "unexpected"}, "ck_classification_review_status"),
+        ({"reason": "unexpected"}, "ck_classification_review_reason"),
+        (
+            {
+                "status": "resolved",
+                "resolved_class": "unexpected",
+                "resolved_by": "reviewer@example.com",
+                "resolved_at": datetime(2026, 9, 10, tzinfo=UTC),
+            },
+            "ck_classification_review_resolved_class",
+        ),
+        (
+            {"status": "resolved"},
+            "ck_classification_review_resolution_consistency",
+        ),
+        (
+            {
+                "status": "pending",
+                "resolved_class": "person",
+                "resolved_by": "reviewer@example.com",
+                "resolved_at": datetime(2026, 9, 10, tzinfo=UTC),
+            },
+            "ck_classification_review_resolution_consistency",
+        ),
+    ],
+    ids=[
+        "bad-status",
+        "bad-reason",
+        "bad-resolved-class",
+        "resolved-without-decision",
+        "pending-with-decision",
+    ],
+)
+def test_classification_review_checks_reject_invalid_rows(
+    overrides: dict[str, object], constraint_name: str
+) -> None:
+    engine = _classification_review_engine()
+
+    with Session(engine) as session:
+        session.add(_classification_review(**overrides))
+        with pytest.raises(IntegrityError, match=constraint_name):
+            session.commit()
+
+
+def test_classification_review_signal_id_is_unique() -> None:
+    engine = _classification_review_engine()
+    signal_id = uuid4()
+
+    with Session(engine) as session:
+        session.add(_classification_review(signal_id=signal_id))
+        session.commit()
+        session.add(_classification_review(signal_id=signal_id, reason="low_confidence"))
+        with pytest.raises(IntegrityError, match="UNIQUE constraint failed"):
+            session.commit()

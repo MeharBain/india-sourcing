@@ -4,7 +4,17 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Float, Integer, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
@@ -136,6 +146,62 @@ class Signal(SQLModel, table=True):
     raw_doc_id: UUID = Field(foreign_key="raw_doc.id", index=True)
     confidence: float
     extractor_version: str
+    created_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+        ),
+    )
+
+
+class ClassificationReview(SQLModel, table=True):
+    """A global human classification decision for one sourced signal."""
+
+    __tablename__ = "classification_review"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'resolved', 'undecidable')",
+            name="ck_classification_review_status",
+        ),
+        CheckConstraint(
+            "reason IN ('ambiguous_class', 'low_confidence')",
+            name="ck_classification_review_reason",
+        ),
+        CheckConstraint(
+            "resolved_class IN ('company_private_limited', 'company_llp', "
+            "'company_opc', 'person', 'ambiguous')",
+            name="ck_classification_review_resolved_class",
+        ),
+        CheckConstraint(
+            "(status = 'resolved' "
+            "AND resolved_class IS NOT NULL "
+            "AND resolved_by IS NOT NULL "
+            "AND resolved_at IS NOT NULL) "
+            "OR (status <> 'resolved' "
+            "AND resolved_class IS NULL "
+            "AND resolved_by IS NULL "
+            "AND resolved_at IS NULL)",
+            name="ck_classification_review_resolution_consistency",
+        ),
+        UniqueConstraint("signal_id", name="uq_classification_review_signal_id"),
+    )
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    signal_id: UUID = Field(foreign_key="signal.id")
+    status: str = Field(
+        default="pending",
+        sa_column=Column(String, nullable=False, server_default="pending"),
+    )
+    reason: str = Field(sa_column=Column(String, nullable=False))
+    resolved_class: str | None = Field(default=None, sa_column=Column(String))
+    resolved_by: str | None = Field(default=None, sa_column=Column(String))
+    resolved_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True)),
+    )
+    notes: str | None = Field(default=None, sa_column=Column(Text))
     created_at: datetime | None = Field(
         default=None,
         sa_column=Column(
