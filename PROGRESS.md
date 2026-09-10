@@ -2,16 +2,14 @@
 
 ## Current position
 
-The repository has its project scaffold, hosted-Postgres schema and initial migration,
-immutable raw-document storage and provenance enforcement, and the connector contract,
-registry, and failure-isolating orchestrator. No concrete connector is registered yet. The
-next task is the first real BIRAC BIG connector, which is blocked until the real BIG-24 and
-BIG-21 PDFs and hand-verified expected JSON fixtures are committed; live fetching also remains
-disabled until a real contact address is configured locally. The former 9-to-18-month product
-bet is now rejected: three cases show five to thirteen years from incorporation to first
-institutional round. What remains contested is the small evidence base, the estimated 10–20%
-institutional-raise rate for BIG grantees, and which later signals can support a reliable
-readiness ranking.
+The repository has its project scaffold, hosted-Postgres schema, immutable raw-document storage,
+provenance enforcement, connector contract, failure-isolating orchestrator, and the first real
+BIRAC BIG connector. Two real cohorts produce 102 signals; exact-name resolution links 65 to
+companies and 25 to people, with 12 awaiting classification review. The product is a deal
+sourcer: it assembles sourced evidence into a shortlist so a human can decide whether to take a
+meeting. It does not predict funding events. The former readiness component is retired at weight
+0, and the provisional 0–85 scoring model awaits a separate alignment task against the evidence
+and hard gate specified in `docs/SHORTLIST_SCHEMA.md`.
 
 Session state for this project. Codex reads this at the start of every session and appends to
 it at the end. Do not delete history — the log is the point.
@@ -977,3 +975,68 @@ web-capable agent. Codex is not involved until Day 6.
 
 **Decisions promoted to docs/DECISIONS.md**
 - ADR-013 amended in place; no new ADR was added.
+
+---
+
+## 2026-09-11 — task 017 product reframe reconciliation
+
+**Branch / commits:** `task/017-product-reframe`, this commit
+**Prompt used:** `docs/tasks/017-product-reframe.md`, including both blocker decisions
+
+**Changed**
+- Reframed the PRD around discovery and evidence assembly: the product is a deal sourcer whose
+  output is a shortlist, with the digest as its delivery vehicle, and it explicitly does not
+  predict funding events.
+- Replaced section 3's obsolete in-window promotion rule with the four-part hard gate from
+  `docs/SHORTLIST_SCHEMA.md`: resolved identity, evidenced description, validation beyond the
+  grant, and known capital status. “Corroborated” was deliberately removed from the gate while
+  remaining a scoring component.
+- Updated the section 5 BIRAC BIG and NIDHI-SSS rows to describe technical validation,
+  non-dilutive commitment and incubator conviction as evidence rather than funding predictions.
+  Both the PRD and source registry now identify BIRAC's Final Score as dossier evidence rather
+  than a weighted predictor and record the n=4 caveat.
+- Brought the section 6 model block up to date with source failure fields and constrained health,
+  mutually exclusive company/person signal links, global classification reviews and the correct
+  candidate-pair purpose of `resolution_candidate`.
+- Retired the readiness component without renormalising the remaining 0–85 score. The PRD and
+  amended ADR-016 preserve why three observations first disabled the curve and add the deeper
+  reason that funding-event prediction was the wrong product job. The former readiness fields
+  remain dossier evidence.
+- Removed “Entering the window,” replaced the primary success metric with meeting conversion,
+  added qualitative discovery credit, and explicitly excluded subsequent raises as a metric.
+- Reconciled only the approved completion conditions in section 13 and both readiness-risk rows
+  in section 14; the broader phase plan remains deferred.
+- Updated this file's Current position to describe the implemented pipeline and deal-sourcing
+  product accurately.
+
+**Consistency sweeps**
+- The original pre-edit sweep searched `predict`, `readiness`, `raise`, `raised`, `precision`,
+  `false positive` and `probability`. Criteria 1 and 2 covered lines 21, 23 and 440–441; ordinary
+  or valid evidence uses were lines 288, 360, 365 and 450. Uncovered stale claims at lines 160,
+  162, 282–283, 323, 330, 334, 380, 464, 514–515, 520 and 528–529 triggered the first blocker and
+  were reconciled by its approved expansion.
+- A follow-up vocabulary check found section 3's `in-window` rule outside that list and triggered
+  the second blocker. Its approved replacement was applied exactly, and criterion 7 was expanded
+  with `window`, `clock`, `timing`, `forecast`, `likely`, `approaching`, `when they` and `about to`.
+- The final expanded sweep found only correct hits: anti-prediction positioning at lines 16,
+  22–23; approved source/score evidence at 168, 170 and 175–178; retirement and historical context
+  at 304–306 and 347–358; ordinary “raise” at 312; the valid capital suppressor and factual example
+  at 381 and 386; explicit non-metric wording at 470–471; human-interest Precision@10 at 481; and
+  the negated old framing in the resolved risk at 554. No blocker remained.
+
+**Verification**
+- `uv run pytest` — 117 passed in 5.59 seconds.
+- `uv run ruff check .` — all checks passed.
+- `ranking probability` does not occur in `PRD.md`.
+
+**Unfinished**
+- Implementing `docs/SHORTLIST_SCHEMA.md`, rebuilding the provisional scoring model, and rewriting
+  the broader section 13 phase plan remain intentionally deferred. The two research-source
+  documents were not edited.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-016 amended in place: readiness scoring is retired because the curve was unsupported and
+  because funding-event prediction is not the product's job.

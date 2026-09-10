@@ -27,7 +27,7 @@ sources:
       - proposal_reference_number   # e.g. BIRAC/CCAMP02283/BIG-24/24
       - applicant_name              # company OR individual person
       - category                    # Medical Devices, Diagnostics, Agriculture, etc.
-      - final_score                 # present in some cohorts only (BIG-18, 21, 23)
+      - final_score                 # dossier evidence, not a weighted predictor; some cohorts only
     notes: |
       HIGH VALUE. Two properties make this the best source in the system:
 
@@ -51,6 +51,12 @@ sources:
          Person awardees include established academics, not only students. Example:
          Mr. Samir K. Maji via SINE (IIT Bombay) in BIG-24. That strengthens the
          spinout-detection thesis - watch professor-name awardees especially.
+
+      3. Final Score is EVIDENCE IN A DOSSIER, NOT A WEIGHTED PREDICTOR.
+         In the initial back-test (n=4), Magnimous Info Tech scored highest at
+         77.86 with no traceable outcome, while Theranautilus - the only awardee
+         found to have raised - scored third of four at 73.19. The sample is too
+         small to infer predictive value.
 
       PDF layout varies between cohorts (score column present or absent, category
       headings differ). One golden fixture PER COHORT, not per source.

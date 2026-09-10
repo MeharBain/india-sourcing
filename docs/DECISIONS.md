@@ -190,17 +190,22 @@ invalidates the former short-window product assumption even though the sample re
 **To reverse:** Produce a larger, date-grounded validation set showing that first institutional
 rounds consistently occur on a materially shorter timeline for the in-scope companies.
 
-## ADR-016: Readiness scoring remains disabled until it is data-backed
+## ADR-016: Readiness scoring is retired
 
-**Decision:** Disable the former timing component at weight 0 rather than re-tuning it. The
-maximum achievable score is 85, and the unused 15 points are not redistributed.
+**Decision:** Retire the former timing component at weight 0 rather than re-tuning it. The
+maximum achievable score remains 85, and the unused 15 points are not redistributed. Evidence
+assembly replaces funding-event prediction as the product's ranking problem.
 
-**Reason:** Three observed cases are insufficient to fit a readiness curve, and a wrong curve
-is worse than none. Redistributing the points would also inflate every score and break
-comparability with earlier results.
+**Reason:** The component was first disabled because three observed cases are insufficient to
+fit a readiness curve, and a wrong curve is worse than none. Redistributing the points would
+also inflate every score and break comparability with earlier results. The later product
+reframe established the deeper reason for retiring it: predicting a funding event is not the
+product's job. Regulatory, clinical, distribution, team and traction evidence belongs in the
+company dossier described by `docs/SHORTLIST_SCHEMA.md`, not in a timing curve.
 
-**To reverse:** Build and validate a readiness model from a sufficiently large set of companies
-with known first institutional equity rounds, then introduce it as an explicit model version.
+**To reverse:** Reverse the product decision and establish that funding-event prediction is a
+required job, then build and validate an explicit model version on a sufficiently large set of
+companies with known first institutional equity rounds. More data alone is not sufficient.
 
 ## ADR-017: Individual BIG awards predict incorporation
 

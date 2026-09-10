@@ -13,14 +13,20 @@ non-obvious public sources: government grant programmes, institutional incubator
 filings and corporate registry data. It surfaces a ranked weekly shortlist and a review
 queue rather than a searchable database.
 
-The product bet is **lead time**, and the measured lead time is far longer than first
-assumed. Incumbents cover companies after incorporation, after a website, after press.
-Grant and incubator records make Indian deeptech companies visible **five to thirteen
-years** before their first institutional round — see `docs/FEASIBILITY_TEST.md`. Detection
-is therefore not the hard problem. Ranking is: at any moment roughly eight BIRAC BIG
-cohorts are simultaneously live, and only an estimated 10–20% of grantees ever raise
-institutional equity. The product's value is in identifying which of a persistent
-watchlist are approaching a raise.
+The product bet is **discovery**, not prediction. Incumbents cover companies after
+incorporation, after a website, after press, and after a round. Grant and incubator records
+make Indian deeptech companies visible years earlier — see `docs/FEASIBILITY_TEST.md`.
+
+The product surfaces deeptech companies with credible technical validation that private
+capital has not yet reached, and presents enough evidence per company for a human to decide
+whether to take a meeting. **It does not predict funding events.** A company living on
+non-dilutive grants with no institutional equity is the target, not a false positive.
+
+Detection is not the hard problem. Ranking is. Roughly eight BIRAC BIG cohorts are live at any
+moment — about 800 entities — and they differ enormously in the strength of their investment
+case. A four-year-old with no website, one founder and no patents is not the same proposition
+as an eighteen-month-old with five patents and a working device. The discriminator is evidence
+assembled per company, specified in `docs/SHORTLIST_SCHEMA.md`.
 
 **Non-goal:** being a comprehensive Indian startup database. That market is taken and the
 buyer already pays for it.
@@ -55,8 +61,10 @@ fragmented and unglamorous.* The difficulty of the work is the moat.
    No field exists without it. This is a sales feature, not just hygiene.
 2. **Corroboration beats volume.** A company appearing in two independent source families
    is worth more than the sum of both. Scoring reflects this explicitly.
-3. **Broad collection, narrow promotion.** Everything enters the graph. Only corroborated,
-   in-window entities reach the digest.
+3. Broad collection, narrow promotion. Everything enters the graph. Only entities passing the
+   hard gate in docs/SHORTLIST_SCHEMA.md reach a shortlist. The gate requires resolved identity,
+   an evidenced description, at least one validation signal beyond the grant itself, and known
+   capital status.
 4. **Shared graph, tenant-scoped workflow.** Company and signal data is shared. Scores,
    notes, status and review events are per-tenant. `tenant_id` present from migration one.
 5. **Human-in-the-loop entity resolution.** Auto-merge above threshold, review queue below.
@@ -157,12 +165,17 @@ Consequences, reflected below and in section 7:
 
 | Source | Signal | Notes |
 |---|---|---|
-| BIRAC BIG grantees | Strongest Indian bio pre-seed signal. Technical founder, validated, predictable funding clock. | Administered via partner incubators (C-CAMP, IKP, Venture Center, FITT). Lists are scattered across partners, not centralised. |
+| BIRAC BIG grantees | Technical validation through panel selection plus ₹50L non-dilutive funding | Administered via partner incubators (C-CAMP, IKP, Venture Center, FITT). This is dossier evidence, not a funding-event prediction. Lists are scattered across partners, not centralised. |
 | BIRAC SEED / LEAP / PACE | Later-stage BIRAC support | Company already past ignition |
-| DST NIDHI-SSS (Seed Support) | Incubator-disbursed seed capital | Only NIDHI variant that reliably implies "will raise" |
+| DST NIDHI-SSS (Seed Support) | Largest non-dilutive commitment among NIDHI variants | Evidence of the strongest incubator conviction, not a prediction that the company will raise |
 | iDEX / SPRINT winners | Defence deeptech | Small lists, very high hit rate |
 | Technology Innovation Hubs (NM-ICPS) | 25 hubs at IITs/IISc funding startups (ARTPARK, C3iHub etc.) | Publish portfolios, structurally underused |
 | TDB (Technology Development Board) | Commercialisation-stage support | Larger cheques, later stage |
+
+The BIRAC Final Score is evidence in a dossier, not a weighted predictor. In the initial
+back-test (n=4), Magnimous Info Tech scored highest at 77.86 with no traceable outcome, while
+Theranautilus — the only awardee found to have raised — scored third of four at 73.19. The
+sample is too small to infer predictive value.
 
 **Tier 2 — corroborating.** Weak alone, valuable in combination.
 
@@ -203,18 +216,26 @@ lag, not merely ambiguity.
 tenant              id, name, thesis_doc, weight_overrides jsonb
 
 source              id, key, name, tier, category, cadence,
-                    last_success_at, health_status
+                    last_success_at, consecutive_failures, last_error,
+                    last_failure_at, health_status
+                    -- health_status constrained: healthy | failed | unknown
 
 raw_doc             id, source_id, url, fetched_at, content_hash,
                     storage_path, http_status
                     -- immutable, never deleted, never re-fetched to re-parse
 
-signal              id, company_id NULL, signal_type, source_id,
+signal              id, company_id NULL, person_id NULL, signal_type, source_id,
                     event_date, payload jsonb, raw_doc_id,
                     confidence, extractor_version, created_at
                     -- append-only fact table; the heart of the system
-                    -- company_id stays NULL until resolution runs
-                    -- signals are never mutated, only re-resolved
+                    -- ck_signal_single_entity: at most one of company_id and
+                    -- person_id is set; resolve/ owns both links
+
+classification_review  id, signal_id UNIQUE, status, reason,
+                       resolved_class NULL, reviewed_by NULL,
+                       reviewed_at NULL, notes NULL, created_at
+                       -- global, not tenant-scoped
+                       -- overrides signal_type during resolution; never mutates it
 
 company             id, cin UNIQUE NULL, legal_name, display_name,
                     incorporation_date, state, city, website,
@@ -229,7 +250,8 @@ company_person      company_id, person_id, role, source_ref, confidence
 
 resolution_candidate  signal_id, company_id, match_score, features jsonb,
                       decided_by, decided_at
-                      -- the review queue for entity resolution
+                      -- candidate-pair adjudication; cannot represent a signal
+                      -- for which no candidate entity exists
 
 score               company_id, tenant_id, total, components jsonb,
                     model_version, computed_at
@@ -279,8 +301,10 @@ Person matching gets the same treatment with an additional initials-expansion st
 
 ## 8. Scoring model v0
 
-Score is 0 to 85 per tenant while the readiness component is disabled; the nominal range is
-0 to 100 and will be restored when readiness is built. Weights live in `config/scoring.yaml`
+Score is 0 to 85 per tenant. The readiness component is retired, not deferred — see ADR-016.
+The scoring model as a whole is provisional pending alignment with docs/SHORTLIST_SCHEMA.md,
+which specifies evidence assembly rather than prediction. Do not renormalise the remaining
+components to 100; rebuilding the model is a separate task. Weights live in config/scoring.yaml
 so they can be tuned without a deploy.
 
 ### Component: source strength (max 35 pts)
@@ -320,21 +344,18 @@ registry / traction are five families. Two incubator listings is one family.
 This is the single most important component. It is what makes the system better than
 reading any one source directly.
 
-### Component: readiness (max 15 pts) — DISABLED, weight 0
+### Retired component: readiness (formerly max 15 pts; weight 0)
 
-This component previously scored months elapsed since the funding-clock signal, peaking at
-12–20 months. That curve was built on the assumption of a 9-to-18-month lead time and is
-refuted by `docs/FEASIBILITY_TEST.md`. A company four years past its BIG grant may be at
-exactly the right moment.
+This component attempted to predict when a company would raise by scoring months elapsed since
+the funding-clock signal, peaking at 12–20 months. It was first disabled because that curve was
+built on a 9-to-18-month lead-time assumption that three observed cases refuted: a company four
+years past its BIG grant may still be at exactly the right moment. The unused 15 points were not
+redistributed, preserving comparability and leaving the maximum achievable score at 85.
 
-**Weight is 0 until a readiness model is built from data.** Maximum achievable score is
-therefore 85, not 100. Do not redistribute these points to other components; doing so
-would silently inflate every score.
-
-The readiness signals to model, from worked case 2 in the feasibility document, are
-regulatory clearances arriving (CDSCO, US FDA, CE), first published clinical study,
-distributor or partner networks appearing, and headcount inflection. None are currently
-in `config/sources.yaml` above Tier 3. Building this is a future task.
+The deeper reason for retirement is that predicting funding events is not the product's job.
+Regulatory clearances, clinical studies, distributor or partner networks, and headcount
+inflection remain valuable as dossier evidence under `docs/SHORTLIST_SCHEMA.md`, not as inputs
+to a timing model.
 
 ### Component: IP depth (max 10 pts)
 
@@ -370,15 +391,16 @@ case found. Company age is not evidence of anything in Indian deeptech.
 
 ## 9. Surfaces
 
+`docs/SHORTLIST_SCHEMA.md` specifies what every surfaced row must carry. Its hard gate applies:
+an individual awardee whose name has not been resolved to a specific person does not reach a
+shortlist.
+
 ### Weekly digest
 
 Delivered Monday morning. Email or Slack. Fixed structure:
 
 - **New this week** (5 to 10 companies). One line each: company, one-sentence description,
   strongest signal with date, score, why-now sentence.
-- **Entering the window.** *Deferred.* This section was defined by the timing component,
-  which is disabled at weight 0 (see section 8). It cannot be built until a readiness model
-  exists. Do not implement a placeholder that silently returns nothing.
 - **Movers.** Companies whose score changed materially, and the specific signal that caused it.
 - **Needs review.** Count of pending entity-resolution decisions, linked.
 - **Source health.** Any connector that failed. Non-negotiable; a silently broken scraper
@@ -437,8 +459,17 @@ The four triage actions are the labelled dataset. Do not collapse them into a si
 
 ## 12. Success metrics
 
-**The metric that matters: precision on the readiness ranking.** Of the top 10 companies
-surfaced in a weekly digest, how many raise institutional capital within 18 months?
+**The metric that matters: meeting conversion.** Of the companies surfaced on a shortlist,
+what fraction were worth an hour of a partner's time? Measurable from `review_event`, and it
+is what the product is felt to be doing week to week.
+
+**Tracked qualitatively: discovery credit.** Companies met because of this system that would
+otherwise have been missed. This is the truest measure of a deal sourcer and the hardest to
+instrument. Record it in prose each quarter rather than pretending it is a metric.
+
+**Explicitly not a metric: whether surfaced companies subsequently raise.** That measures
+prediction, which is not the job. A company that never takes institutional capital may still
+have been worth the meeting.
 
 Lead time is no longer the headline metric. It is measured at five to thirteen years and
 is not the constraint. Detection is solved; ranking is not.
@@ -461,13 +492,8 @@ Supporting metrics:
 
 Two deliverables, both manual:
 
-1. **Lead-time feasibility test.** Take 20 Indian deeptech companies that raised seed in the
-   last 18 months. Manually check whether each appears earlier in BIRAC, DST, incubator or
-   patent records, and by how many months. Record results in a spreadsheet.
-   - 15+ of 20 with meaningful lead time → premise validated, proceed
-   - 8 to 14 → proceed but narrow the source set to what actually hit
-   - Under 8 → stop and rethink. The premise is weaker than it looks and this is a cheap
-     place to discover that.
+1. **Feasibility back-test.** This ran and is recorded in `docs/FEASIBILITY_TEST.md`; it tested
+   source lead time and dossier completeness and produced the evidence-assembly product reframe.
 2. **Source availability audit** → `sources.yaml`. For each of ~25 candidate sources:
    URL, format (HTML/PDF/API/bulk), auth or CAPTCHA barrier, update cadence, robots and
    ToS position, licence terms, estimated rows per year, scrape difficulty 1 to 5.
@@ -511,13 +537,13 @@ Done when: a digest lands in your inbox on Monday without you doing anything.
 Build the 50-company golden set properly. Back-test. Measure lead time and recall. Tune
 weights against results, not intuition.
 
-Done when: you have a defensible precision figure for the readiness ranking — of the top 10
-surfaced, how many raised institutional capital within 18 months.
+Done when: shortlist quality can be assessed against meeting conversion — of the companies
+surfaced, what fraction were worth an hour of a partner's time.
 
 ### Phase 6+ — productisation
 
 Auth, tenancy activation, billing, contact discovery, outreach drafting, CRM export.
-Not before Phase 5 produces a defensible precision figure for the readiness ranking.
+Not before Phase 5 shows shortlist quality can be assessed against meeting conversion.
 
 ---
 
@@ -525,8 +551,8 @@ Not before Phase 5 produces a defensible precision figure for the readiness rank
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| Lead-time premise did not hold as stated | Resolved | Measured at 5–13 years, not 9–18 months. Product reframed around readiness ranking. See ADR-015 and `docs/FEASIBILITY_TEST.md` |
-| Readiness ranking cannot be modelled | Fatal | Detection is solved; if readiness cannot be predicted the digest is unrankable. Open — no mitigation yet |
+| Lead-time premise did not hold as stated | Resolved | Measured at 5–13 years, not 9–18 months. Product reframed around evidence assembly, not readiness ranking. See ADR-015 and `docs/FEASIBILITY_TEST.md` |
+| Shortlist ranking may not discriminate | Fatal | If evidence assembly cannot separate a strong investment case from a weak one across ~800 entities, the shortlist is not a shortlist. Open — no mitigation yet |
 | Source availability worse than assumed (CAPTCHAs, logins, no bulk access) | High | Phase 0 audit; design for PDF-first from the start |
 | Entity resolution quality caps everything downstream | High | Phase 2 early, human-in-loop, log all decisions |
 | Buyer market is small (~100–200 Indian funds who'd pay) | Medium | Explore adjacent buyers: global funds, corporates, agencies |

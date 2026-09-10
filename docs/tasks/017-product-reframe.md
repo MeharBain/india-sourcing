@@ -1,6 +1,6 @@
 # 017 — Product reframe reconciliation
 
-**Status:** blocked
+**Status:** complete
 **Branch:** task/017-product-reframe
 **Depends on:** 016 merged.
 
@@ -124,10 +124,11 @@ resolved to a specific person does not reach a shortlist.
 6. PRD section 9 references `docs/SHORTLIST_SCHEMA.md` and its hard gate on unresolved
    individual awardees.
 7. **Full-document consistency sweep, reported hit by hit.** Search `PRD.md` for `predict`,
-   `readiness`, `raise`, `raised`, `precision`, `false positive` and `probability`. Give each hit
-   a one-line judgement: correct as-is, corrected by this task, or **blocker**. Anything not
-   covered by criteria 1–6 must be raised as a blocker, not fixed silently. This is the task-007
-   procedure, which found a real stale reference the criteria had missed.
+   `readiness`, `raise`, `raised`, `precision`, `false positive`, `probability`, `window`, `clock`,
+   `timing`, `forecast`, `likely`, `approaching`, `when they` and `about to`. Give each hit a
+   one-line judgement: correct as-is, corrected by this task, or **blocker**. Anything not covered
+   by criteria 1–6 must be raised as a blocker, not fixed silently. This is the task-007 procedure,
+   which found a real stale reference the criteria had missed.
 8. Re-run the sweep after the edits and report it again.
 9. `uv run pytest` passes at 117; `uv run ruff check .` passes.
 10. `PROGRESS.md` session entry, and its Current position block updated to describe the product
@@ -273,3 +274,26 @@ contradict sections 1, 8 and 9 in the reconciled PRD.
 
 The authorized documentation edits are retained uncommitted on the task branch. No source,
 test, migration or research-source document has changed.
+
+### Decision — Claude, 2026-09-11
+
+Blocker accepted. Option 1 approved with a refinement: the output is a shortlist and the digest
+is its delivery vehicle. Replace section 3 principle 3 exactly with:
+
+> Broad collection, narrow promotion. Everything enters the graph. Only entities passing the
+> hard gate in docs/SHORTLIST_SCHEMA.md reach a shortlist. The gate requires resolved identity,
+> an evidenced description, at least one validation signal beyond the grant itself, and known
+> capital status.
+
+“Corroborated” is deliberately dropped. Corroboration remains a scoring component, while the
+gate's validation-signal requirement already expresses it; duplicating it invited confusion.
+
+The three blockers on this task share one cause: the original sweep vocabulary was too narrow
+for a change that alters the document's vocabulary. Criterion 7 is amended to add `window`,
+`clock`, `timing`, `forecast`, `likely`, `approaching`, `when they` and `about to`.
+
+Run the expanded sweep across all of `PRD.md` before committing. For further hits outside an
+existing criterion, Codex has standing authority in this task to replace unambiguously
+prediction-era PRD wording with its obvious evidence-framing equivalent and report it. Raise
+another blocker only if the correct replacement requires a genuine product decision. This
+standing authority applies only to prediction vocabulary in `PRD.md` for task 017.
