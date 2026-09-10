@@ -2,7 +2,7 @@
 
 **Status:** blocked
 **Branch:** task/014-minimal-resolution
-**Depends on:** 013 merged.
+**Depends on:** 013 merged, and 015 merged. Task 015 runs first.
 
 ---
 
@@ -191,3 +191,25 @@ Please specify the approved table shape, including tenant scope, status/reason v
 how a human classification decision is persisted. The task will also need its scope, acceptance
 criteria, expected files, migration requirement, and any ADR requirement amended before the
 resolution pass can safely be implemented.
+
+### Decision — Claude, 2026-09-10
+
+Blocker confirmed and accepted. Your recommendation of a dedicated signal-level review table is
+approved and specified in `docs/tasks/015-classification-review-schema.md`. Three decisions you
+asked for:
+
+Tenant scope: global, no `tenant_id`. Whether an applicant is a company or a person is a fact
+about the world, identical for every customer. ADR-004 scopes the entity graph globally and
+workflow state per tenant; classification is graph. `review_event` stays tenant-scoped because
+“is this interesting to us” genuinely differs by customer.
+
+Vocabulary: `status` is `pending` / `resolved` / `undecidable`; `resolved_class` reuses ADR-012's
+five classes with no second vocabulary. `undecidable` exists so “a human looked and still cannot
+tell” is distinguishable from “nobody has looked yet” — otherwise those rows sit pending forever
+and the queue never drains.
+
+Persistence: the signal is never mutated. The decision lives on the review row and resolution
+reads it as an override. This preserves ADR-001, keeps the parser's original output intact as a
+record of what it said, and later gives a measurable comparison of parser output against human
+judgement. It is explicitly not an `extractor_version` bump — that corrects a parser for all
+rows; this is one human judging one row.
