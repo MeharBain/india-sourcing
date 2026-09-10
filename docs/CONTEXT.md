@@ -64,21 +64,6 @@ Roughly 117 tests. Migration head as of writing: `9d6f1e2a4b80`.
 
 The most important section. An agent that reads the PRD without this will build the wrong thing.
 
-### Task 017 is blocked, so the PRD still contradicts the product
-
-The product was reframed from *predicting which companies will raise* to *assembling evidence
-so a human can decide*. Task 017 reconciles the PRD with that and **has not landed**. It is
-blocked three times over, each time because the reframe alters the document's whole vocabulary
-rather than a few paragraphs.
-
-Until it lands, **PRD sections 3, 5, 8, 13 and 14 still contain prediction-era language**:
-a "funding clock", NIDHI-SSS "will raise", readiness described as a temporarily disabled
-component that will be "restored", "in-window entities", and a risk row calling failure to
-predict readiness fatal.
-
-Treat all of it as superseded. `docs/SHORTLIST_SCHEMA.md` and `docs/FEASIBILITY_TEST.md` are the
-current framing.
-
 ### `docs/tasks/README.md` does not require the `## Interpretations` section
 
 `spec-writer` is instructed to produce it; the convention does not list it. They disagree. The
