@@ -272,14 +272,17 @@ check, and guarantees that persisted signals carry the same identity.
 
 **Decision:** Record human applicant-type classification in one global
 `classification_review` row per signal. A resolved review overrides `signal.signal_type` during
-resolution without mutating the signal; pending and undecidable reviews remain explicit queue
-outcomes.
+resolution without mutating the signal. Pending rows have not been examined; resolved and
+undecidable rows both record who reviewed them and when, while only resolved rows carry a
+`resolved_class` decision.
 
 **Reason:** Whether a source applicant is a company, person, or ambiguous is shared entity-graph
 truth rather than tenant-specific workflow judgement, so duplicating it per tenant could produce
 contradictory canonical entities. Keeping the decision separate preserves ADR-001's append-only
 signal history, retains what the parser originally said for audit and accuracy measurement, and
 allows a human correction to apply to one row without pretending the parser changed globally.
+Recording examination metadata for undecidable reviews distinguishes “looked but could not tell”
+from “not yet reviewed” and preserves that judgement for later re-review and labelled-data use.
 
 **To reverse:** Demonstrate that applicant classification legitimately differs by tenant, or
 replace the review row with another auditable, signal-scoped and version-preserving decision

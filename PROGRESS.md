@@ -775,38 +775,44 @@ web-capable agent. Codex is not involved until Day 6.
   ADR-012's five applicant classes.
 - Added migration `5a3e7b1c9d02` on top of prior head `c4b9e2d7a106`; neither existing migration
   was edited.
-- Enforced resolution consistency with `(status = 'resolved' AND resolved_class IS NOT NULL AND
-  resolved_by IS NOT NULL AND resolved_at IS NOT NULL) OR (status <> 'resolved' AND
-  resolved_class IS NULL AND resolved_by IS NULL AND resolved_at IS NULL)`.
+- After the pre-merge specification correction, renamed examination metadata to `reviewed_by`
+  and `reviewed_at`. Enforced three explicit states: pending has no decision or review metadata;
+  resolved has a class and both review fields; undecidable has both review fields but no class.
 - Added ADR-022 documenting global tenant scope, override-without-mutation behavior, and reversal
   conditions.
 
 **Tests proving it**
 - Test-first focused collection failed because `ClassificationReview` did not yet exist. After
-  implementation, `tests/test_models.py` passes 17 tests.
+  the original implementation and amendment, `tests/test_models.py` passes 21 tests.
 - `test_classification_review_schema_matches_contract` asserts the exact columns, nullability,
   signal foreign key, pending default, four named CHECKs, no `tenant_id`, and unique signal key.
 - `test_classification_review_checks_reject_invalid_rows` covers bad status, reason and resolved
-  class plus resolved-without-decision and pending-with-decision in both directions of the
-  consistency rule.
+  class. `test_classification_review_accepts_each_valid_state` accepts pending, resolved and
+  undecidable rows. `test_classification_review_rejects_inconsistent_states` rejects an
+  undecidable row without `reviewed_by`, a pending row with `reviewed_by`, and a resolved row
+  without `resolved_class`.
 - `test_classification_review_signal_id_is_unique` proves a second review for one signal is
   rejected.
 - `test_postgres_json_fields_use_jsonb` remains unchanged and still enumerates exactly four JSONB
   columns.
-- Pre-change `uv run pytest` — 92 passed. Post-change `uv run pytest` — 99 passed.
+- Pre-change `uv run pytest` — 92 passed. Post-amendment `uv run pytest` — 103 passed.
 - `uv run ruff check .` — all checks passed before and after.
 - `uv run alembic check` against the final Neon head — no new upgrade operations detected.
 
 **Neon migration round-trip**
-- Neon began at `c4b9e2d7a106`. `alembic upgrade head` applied `5a3e7b1c9d02`.
-- `information_schema` showed the nine specified columns, timezone-aware `resolved_at` and
-  `created_at`, the pending and now defaults, the four named CHECKs, signal foreign key, primary
-  key, and `uq_classification_review_signal_id`. The row count was zero.
-- `alembic downgrade -1` returned to `c4b9e2d7a106`; `information_schema.tables` returned zero
-  matching tables. The final upgrade restored `5a3e7b1c9d02 (head)` with zero rows.
-- Transactional Neon probes rejected all five invalid CHECK cases under their expected names and
-  rejected the duplicate signal under `uq_classification_review_signal_id`. Every probe rolled
-  back and the final row count remained zero.
+- Before editing the unmerged migration, Neon was downgraded from `5a3e7b1c9d02` to
+  `c4b9e2d7a106` and `information_schema.tables` confirmed the old table was gone. The migration
+  was then amended in place as directed.
+- `alembic upgrade head` applied the amended `5a3e7b1c9d02`. `information_schema` showed the nine
+  specified columns including timezone-aware `reviewed_at` and `created_at`, the four named
+  CHECKs, signal foreign key, primary key, and `uq_classification_review_signal_id`. The
+  three-clause state expression matched the specification and the row count was zero.
+- `alembic downgrade -1` again returned to `c4b9e2d7a106`; `information_schema.tables` returned
+  zero matching tables. The final upgrade restored `5a3e7b1c9d02 (head)`.
+- Transactional Neon probes accepted pending, resolved and undecidable states. They rejected the
+  three vocabulary violations, an undecidable row without `reviewed_by`, a pending row with
+  `reviewed_by`, a resolved row without `resolved_class`, and a duplicate signal. Every probe
+  rolled back and the final row count remained zero.
 
 **Behavioural/proxy disclosure**
 - Default-suite constraint tests execute behaviorally on SQLite, so they are a proxy for the

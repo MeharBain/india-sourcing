@@ -175,14 +175,18 @@ class ClassificationReview(SQLModel, table=True):
             name="ck_classification_review_resolved_class",
         ),
         CheckConstraint(
-            "(status = 'resolved' "
-            "AND resolved_class IS NOT NULL "
-            "AND resolved_by IS NOT NULL "
-            "AND resolved_at IS NOT NULL) "
-            "OR (status <> 'resolved' "
+            "(status = 'pending' "
             "AND resolved_class IS NULL "
-            "AND resolved_by IS NULL "
-            "AND resolved_at IS NULL)",
+            "AND reviewed_by IS NULL "
+            "AND reviewed_at IS NULL) "
+            "OR (status = 'resolved' "
+            "AND resolved_class IS NOT NULL "
+            "AND reviewed_by IS NOT NULL "
+            "AND reviewed_at IS NOT NULL) "
+            "OR (status = 'undecidable' "
+            "AND resolved_class IS NULL "
+            "AND reviewed_by IS NOT NULL "
+            "AND reviewed_at IS NOT NULL)",
             name="ck_classification_review_resolution_consistency",
         ),
         UniqueConstraint("signal_id", name="uq_classification_review_signal_id"),
@@ -196,8 +200,8 @@ class ClassificationReview(SQLModel, table=True):
     )
     reason: str = Field(sa_column=Column(String, nullable=False))
     resolved_class: str | None = Field(default=None, sa_column=Column(String))
-    resolved_by: str | None = Field(default=None, sa_column=Column(String))
-    resolved_at: datetime | None = Field(
+    reviewed_by: str | None = Field(default=None, sa_column=Column(String))
+    reviewed_at: datetime | None = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True)),
     )

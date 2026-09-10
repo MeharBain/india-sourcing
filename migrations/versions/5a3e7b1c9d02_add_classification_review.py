@@ -30,8 +30,8 @@ def upgrade() -> None:
         ),
         sa.Column("reason", sa.String(), nullable=False),
         sa.Column("resolved_class", sa.String(), nullable=True),
-        sa.Column("resolved_by", sa.String(), nullable=True),
-        sa.Column("resolved_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("reviewed_by", sa.String(), nullable=True),
+        sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column(
             "created_at",
@@ -53,14 +53,18 @@ def upgrade() -> None:
             name="ck_classification_review_resolved_class",
         ),
         sa.CheckConstraint(
-            "(status = 'resolved' "
-            "AND resolved_class IS NOT NULL "
-            "AND resolved_by IS NOT NULL "
-            "AND resolved_at IS NOT NULL) "
-            "OR (status <> 'resolved' "
+            "(status = 'pending' "
             "AND resolved_class IS NULL "
-            "AND resolved_by IS NULL "
-            "AND resolved_at IS NULL)",
+            "AND reviewed_by IS NULL "
+            "AND reviewed_at IS NULL) "
+            "OR (status = 'resolved' "
+            "AND resolved_class IS NOT NULL "
+            "AND reviewed_by IS NOT NULL "
+            "AND reviewed_at IS NOT NULL) "
+            "OR (status = 'undecidable' "
+            "AND resolved_class IS NULL "
+            "AND reviewed_by IS NOT NULL "
+            "AND reviewed_at IS NOT NULL)",
             name="ck_classification_review_resolution_consistency",
         ),
         sa.ForeignKeyConstraint(["signal_id"], ["signal.id"]),

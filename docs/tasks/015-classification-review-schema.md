@@ -69,8 +69,8 @@ One table, one migration, one ADR.
 | `status` | VARCHAR + CHECK | no | `'pending'` | `'pending'`, `'resolved'`, `'undecidable'` |
 | `reason` | VARCHAR + CHECK | no | — | Why review was required: `'ambiguous_class'`, `'low_confidence'` |
 | `resolved_class` | VARCHAR + CHECK | yes | — | One of ADR-012's five classes. Null unless `status = 'resolved'` |
-| `resolved_by` | VARCHAR | yes | — | Who decided |
-| `resolved_at` | TIMESTAMPTZ | yes | — | |
+| `reviewed_by` | VARCHAR | yes | — | Who examined the row |
+| `reviewed_at` | TIMESTAMPTZ | yes | — | When the row was examined |
 | `notes` | TEXT | yes | — | |
 | `created_at` | TIMESTAMPTZ | no | `now()` | |
 
@@ -99,10 +99,21 @@ forever and the queue never drains.
    constraints on `status`, `reason` and `resolved_class`, and a unique constraint on
    `signal_id`.
 
-2. A **consistency constraint**: `resolved_class`, `resolved_by` and `resolved_at` are non-null
-   if and only if `status = 'resolved'`. Implement as a table-level CHECK. State the constraint
-   expression. This prevents a row claiming resolution with no recorded decision, and a row
-   carrying a decision while still marked pending.
+2. A **consistency constraint** implements these three explicit state clauses as a table-level
+   CHECK:
+
+   ```sql
+   (status = 'pending' AND resolved_class IS NULL
+       AND reviewed_by IS NULL AND reviewed_at IS NULL)
+   OR (status = 'resolved' AND resolved_class IS NOT NULL
+       AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL)
+   OR (status = 'undecidable' AND resolved_class IS NULL
+       AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL)
+   ```
+
+   State the constraint expression. This prevents pending rows from carrying review metadata,
+   resolved rows from omitting their decision or reviewer, and undecidable rows from losing who
+   examined them and when.
 
 3. New Alembic migration with `down_revision` pointing at the current head. Report the current
    head and confirm no existing migration was edited.
@@ -113,6 +124,10 @@ forever and the queue never drains.
 
 5. Tests asserting each CHECK rejects an invalid value: a bad `status`, a bad `reason`, a bad
    `resolved_class`, and both directions of criterion 2's consistency rule.
+
+5a. Tests assert each of the three states is accepted, and that these are rejected: an
+    `undecidable` row with no `reviewed_by`, a `pending` row with a `reviewed_by`, and a
+    `resolved` row with no `resolved_class`.
 
 6. A test asserts the unique constraint on `signal_id` rejects a second review for the same
    signal.
@@ -163,3 +178,40 @@ docs/tasks/015-classification-review-schema.md   this file, committed
 ## Blockers and questions
 
 *(none at creation)*
+
+### Amendment — Claude, 2026-09-10: consistency constraint was wrong
+
+Criterion 2 as written bundles `resolved_class`, `resolved_by` and `resolved_at` into a single
+rule keyed on `status = 'resolved'`. That was my error. Those columns mean different things:
+`resolved_class` is the decision, while `resolved_by` and `resolved_at` record that a human
+examined the row at all.
+
+The consequence is that an `undecidable` row — someone looked and could not tell — cannot record
+who looked or when. You then cannot re-surface it when better information arrives, and it
+contributes nothing to the labelled dataset ADR-007 treats as an asset.
+
+The table is empty and the branch unmerged, so this is free now and needs a data migration later.
+
+Rename `resolved_by` → `reviewed_by` and `resolved_at` → `reviewed_at`. They apply to examination,
+not decision. `resolved_class` keeps its name.
+
+Replace criterion 2's constraint with three explicit state clauses:
+
+```sql
+(status = 'pending'     AND resolved_class IS NULL
+    AND reviewed_by IS NULL     AND reviewed_at IS NULL)
+OR (status = 'resolved'    AND resolved_class IS NOT NULL
+    AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL)
+OR (status = 'undecidable' AND resolved_class IS NULL
+    AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL)
+```
+
+Add criterion 5a: tests assert each of the three states is accepted, and that these are rejected
+— an `undecidable` row with no `reviewed_by`, a `pending` row with a `reviewed_by`, and a
+`resolved` row with no `resolved_class`.
+
+Amend the column table at lines 72–73 to match the new names, and update line 102.
+
+My sweep: `resolved_by`/`resolved_at` appear at lines 72, 73 and 102, all amended above.
+`undecidable` appears at 69, 79 and 80 — vocabulary unchanged, and line 79's rationale now holds
+more fully than it did.

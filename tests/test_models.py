@@ -205,8 +205,8 @@ def test_classification_review_schema_matches_contract() -> None:
         "status",
         "reason",
         "resolved_class",
-        "resolved_by",
-        "resolved_at",
+        "reviewed_by",
+        "reviewed_at",
         "notes",
         "created_at",
     }
@@ -217,8 +217,8 @@ def test_classification_review_schema_matches_contract() -> None:
     assert columns.signal_id.nullable is False
     assert str(columns.status.server_default.arg) == "pending"
     assert columns.resolved_class.nullable is True
-    assert columns.resolved_by.nullable is True
-    assert columns.resolved_at.nullable is True
+    assert columns.reviewed_by.nullable is True
+    assert columns.reviewed_at.nullable is True
     assert columns.notes.nullable is True
     assert columns.created_at.nullable is False
     assert columns.created_at.server_default is not None
@@ -251,31 +251,16 @@ def test_classification_review_schema_matches_contract() -> None:
             {
                 "status": "resolved",
                 "resolved_class": "unexpected",
-                "resolved_by": "reviewer@example.com",
-                "resolved_at": datetime(2026, 9, 10, tzinfo=UTC),
+                "reviewed_by": "reviewer@example.com",
+                "reviewed_at": datetime(2026, 9, 10, tzinfo=UTC),
             },
             "ck_classification_review_resolved_class",
-        ),
-        (
-            {"status": "resolved"},
-            "ck_classification_review_resolution_consistency",
-        ),
-        (
-            {
-                "status": "pending",
-                "resolved_class": "person",
-                "resolved_by": "reviewer@example.com",
-                "resolved_at": datetime(2026, 9, 10, tzinfo=UTC),
-            },
-            "ck_classification_review_resolution_consistency",
         ),
     ],
     ids=[
         "bad-status",
         "bad-reason",
         "bad-resolved-class",
-        "resolved-without-decision",
-        "pending-with-decision",
     ],
 )
 def test_classification_review_checks_reject_invalid_rows(
@@ -286,6 +271,71 @@ def test_classification_review_checks_reject_invalid_rows(
     with Session(engine) as session:
         session.add(_classification_review(**overrides))
         with pytest.raises(IntegrityError, match=constraint_name):
+            session.commit()
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"status": "pending"},
+        {
+            "status": "resolved",
+            "resolved_class": "person",
+            "reviewed_by": "reviewer@example.com",
+            "reviewed_at": datetime(2026, 9, 10, tzinfo=UTC),
+        },
+        {
+            "status": "undecidable",
+            "reviewed_by": "reviewer@example.com",
+            "reviewed_at": datetime(2026, 9, 10, tzinfo=UTC),
+        },
+    ],
+    ids=["pending", "resolved", "undecidable"],
+)
+def test_classification_review_accepts_each_valid_state(
+    overrides: dict[str, object],
+) -> None:
+    engine = _classification_review_engine()
+
+    with Session(engine) as session:
+        session.add(_classification_review(**overrides))
+        session.commit()
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {
+            "status": "undecidable",
+            "reviewed_at": datetime(2026, 9, 10, tzinfo=UTC),
+        },
+        {
+            "status": "pending",
+            "reviewed_by": "reviewer@example.com",
+        },
+        {
+            "status": "resolved",
+            "reviewed_by": "reviewer@example.com",
+            "reviewed_at": datetime(2026, 9, 10, tzinfo=UTC),
+        },
+    ],
+    ids=[
+        "undecidable-without-reviewer",
+        "pending-with-reviewer",
+        "resolved-without-class",
+    ],
+)
+def test_classification_review_rejects_inconsistent_states(
+    overrides: dict[str, object],
+) -> None:
+    engine = _classification_review_engine()
+
+    with Session(engine) as session:
+        session.add(_classification_review(**overrides))
+        with pytest.raises(
+            IntegrityError,
+            match="ck_classification_review_resolution_consistency",
+        ):
             session.commit()
 
 
