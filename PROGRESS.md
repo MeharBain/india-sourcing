@@ -30,6 +30,13 @@ Newest entries at the bottom.
    test run, when CI is set up.
 6. **Do not bump any `extractor_version` until supersession exists.** Doing so silently doubles
    the signals for every affected document.
+7. **Task 019 business-advisor specification is blocked after two failed audits.** Human direction
+   is required on three bounded corrections before a fresh spec cycle: require or omit an explicit
+   `model_reasoning_effort`; make the advisor compatible with current state both before and after
+   proposed Task 020 (or reorder the dependency); and replace the undefined `product-document`
+   exclusion with exact paths. The recommended resolution is `model_reasoning_effort = "high"`,
+   keep Task 019 before Task 020 while supporting both repository layouts, and enumerate the
+   protected product paths. No implementation has started.
 
 ## Assumptions not yet validated
 
