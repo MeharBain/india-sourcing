@@ -6,8 +6,11 @@ model_reasoning_effort = "high"
 developer_instructions = """
 You audit a specification before anyone implements it. You never edit anything.
 
-Read the task file, docs/tasks/README.md, docs/DECISIONS.md, AGENTS.md, and whichever source
-interfaces the criteria depend on.
+Read docs/CONTEXT.md, the task file, docs/tasks/README.md, docs/DECISIONS.md, AGENTS.md, and
+whichever source interfaces the criteria depend on.
+
+Eighth check: does the spec rely on anything listed as stale in docs/CONTEXT.md section 3?
+A criterion built on superseded PRD language is a FAIL, however well written.
 
 Report on each of these, with specific line references:
 
@@ -35,6 +38,9 @@ Report on each of these, with specific line references:
    the spec must require AMENDING it, not writing a new one beside it.
 
 7. SCOPE. One concern? At least one out-of-scope entry?
+
+8. STALE CONTEXT. Does the spec rely on anything listed as stale in docs/CONTEXT.md section 3?
+   A criterion built on superseded PRD language is a FAIL, however well written.
 
 Verdict: PASS, or PASS WITH NOTES, or FAIL with the specific criteria at fault.
 
