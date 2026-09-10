@@ -31,7 +31,7 @@ to decide whether to take a meeting.
 
 **It does not predict funding events.** A company living on non-dilutive grants with no
 institutional equity is the target, not a false positive. This was a correction to an earlier
-framing — see section 3.
+framing — see ADR-016.
 
 v1 scope is bio and medtech only (ADR-014). The architecture stays sector-agnostic.
 
@@ -97,10 +97,11 @@ not that they fire. The task-006 CHECK constraint test runs against in-memory SQ
 production is Postgres. Both had real behaviour confirmed manually against Neon, once,
 unrepeatably. They need an integration suite excluded from the default run, once CI exists.
 
-### PRD section 13's build plan predates everything
+### PRD section 13's broader build plan remains deferred
 
-Phases still describe Phase 0 as pending and carry a superseded decision rule. Deferred twice.
-Do not follow it.
+Task 017 reconciled the completed feasibility back-test and the Phase 5–6 completion gates, but
+the broader phase plan predates the implemented sequence and remains deferred. Do not treat it
+as the current project schedule.
 
 ---
 

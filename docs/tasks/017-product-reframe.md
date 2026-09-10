@@ -357,3 +357,19 @@ The post-edit sweep has no hits for `probability`, `window`, `forecast`, `likely
 
 Final verification: `uv run pytest` passed all 117 tests in 8.84 seconds, and
 `uv run ruff check .` reported `All checks passed!`.
+
+#### Review rework authority and dependent cleanup
+
+The user explicitly authorized deleting the obsolete opening Task 017 entry from
+`docs/CONTEXT.md` section 3 in the same commit as the resolved third blocker; commit `c937113`
+did so and preserved every other context entry. Independent review then identified two dependent
+current-state defects created or exposed by the reconciliation. Rework cycle 1 mechanically
+replaced section 1's dangling `see section 3` reference with ADR-016, and rewrote section 3's
+stale claim that PRD Phase 0 was pending while preserving the accepted decision that the broader
+section 13 phase plan remains deferred. The same review rework deleted obsolete top-level
+Current phase, Next task and Gate status sections from `PROGRESS.md` rather than inventing new
+current-state claims; open questions and session history remain intact.
+
+Review-rework verification: `uv run pytest` passed all 117 tests in 6.59 seconds, and
+`uv run ruff check .` reported `All checks passed!`. The expanded PRD sweep was rerun with the
+same matches and line numbers recorded above.
