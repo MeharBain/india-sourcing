@@ -91,10 +91,11 @@ def _pure_parse_boundary(connector: object) -> Iterator[None]:
         yield
 
 
-def _registered_signal_rows() -> Iterable[tuple[Signal, RawDoc]]:
+def _registered_signal_rows() -> Iterable[tuple[str, Signal, RawDoc]]:
     """Yield signals and their resolved raw documents from connector fixtures."""
 
-    for connector in REGISTERED_CONNECTORS:
+    for connector_class in REGISTERED_CONNECTORS:
+        connector = connector_class()
         raw_docs = {raw_doc.id: raw_doc for raw_doc in connector.contract_raw_docs()}
         with _pure_parse_boundary(connector):
             signals = list(connector.contract_signals())
@@ -103,15 +104,16 @@ def _registered_signal_rows() -> Iterable[tuple[Signal, RawDoc]]:
             assert resolved_raw_doc is not None, (
                 f"raw_doc_id {signal.raw_doc_id} does not resolve"
             )
-            yield signal, resolved_raw_doc
+            yield connector.key, signal, resolved_raw_doc
 
 
 def test_every_registered_connector_returns_signals_with_reachable_provenance() -> None:
     rows = list(_registered_signal_rows())
 
     assert any(connector.key == "birac_big" for connector in REGISTERED_CONNECTORS)
+    assert sum(key == "birac_big" for key, _, _ in rows) == 102
     assert rows
-    for signal, raw_doc in rows:
+    for _, signal, raw_doc in rows:
         assert missing_provenance(signal, raw_doc) == ()
 
 

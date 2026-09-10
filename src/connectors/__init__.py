@@ -2,6 +2,6 @@
 
 from src.connectors.base import Connector, FetchTarget, discover_connectors
 
-REGISTERED_CONNECTORS = discover_connectors()
+REGISTERED_CONNECTORS: tuple[type[Connector], ...] = discover_connectors()
 
 __all__ = ["REGISTERED_CONNECTORS", "Connector", "FetchTarget", "discover_connectors"]

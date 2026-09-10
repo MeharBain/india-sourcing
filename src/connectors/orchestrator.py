@@ -34,10 +34,10 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def _source_for_connector(session: Session, connector: Connector) -> Source:
-    source = session.exec(select(Source).where(Source.key == connector.key)).one_or_none()
+def _source_for_connector(session: Session, connector_key: str) -> Source:
+    source = session.exec(select(Source).where(Source.key == connector_key)).one_or_none()
     if source is None:
-        raise LookupError(f"No source row exists for connector key {connector.key!r}")
+        raise LookupError(f"No source row exists for connector key {connector_key!r}")
     return source
 
 
@@ -54,7 +54,7 @@ def _validate_signal(signal: Signal, source: Source, raw_docs: dict[UUID, RawDoc
 def run_connectors(
     *,
     session: Session,
-    connectors: Iterable[Connector] | None = None,
+    connectors: Iterable[type[Connector]] | None = None,
     fetcher: Fetcher = storage.fetch,
     now: Now = _utc_now,
 ) -> None:
@@ -65,10 +65,11 @@ def run_connectors(
 
         connectors = REGISTERED_CONNECTORS
 
-    for connector in connectors:
+    for connector_class in connectors:
         source: Source | None = None
         try:
-            source = _source_for_connector(session, connector)
+            source = _source_for_connector(session, connector_class.key)
+            connector = connector_class()
             targets = list(connector.discover())
             raw_docs = []
             for target in targets:
@@ -95,7 +96,7 @@ def run_connectors(
             session.commit()
         except Exception as error:
             session.rollback()
-            logger.exception("Connector %s failed", connector.key)
+            logger.exception("Connector %s failed", connector_class.key)
             if source is None:
                 continue
             source.health_status = "failed"

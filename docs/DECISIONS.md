@@ -239,3 +239,18 @@ as source fact.
 **To reverse:** Replace name-shape inference with authoritative applicant types or a validated
 classifier that demonstrably eliminates this company-as-person failure mode without reducing
 coverage, and retain an auditable review path for remaining uncertainty.
+
+## ADR-020: Connector registration is non-instantiating
+
+**Decision:** Register connector classes without instantiating them. Construct each connector
+inside the orchestrator's per-source failure boundary, after resolving its source row from the
+class-level key.
+
+**Reason:** Eager construction at import time places connector-specific I/O outside the
+isolation boundary. A single malformed configuration can then cause a total pipeline failure
+without recording the failure on its source row or allowing healthy connectors to run.
+
+**To reverse:** Provide a replacement lifecycle that keeps all connector-specific
+initialization failures inside a per-source boundary, records each failure against the correct
+source row, and continues running healthy connectors before allowing registration to construct
+instances again.

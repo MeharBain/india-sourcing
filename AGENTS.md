@@ -105,6 +105,8 @@ Hard rules:
    infrastructure metadata, and no key in it may begin with an underscore.
 5. **Fail loudly per-source, never globally.** A broken connector must not stop the run.
    Catch at the orchestrator boundary, record the failure in `source.health_status`, continue.
+   Connector construction, not merely `discover()` and `parse()`, happens inside the
+   orchestrator's failure boundary; registration must not instantiate connectors.
 6. **Rate limit.** One request per two seconds per domain, via the shared fetch helper. Do
    not use `requests` or raw `httpx` directly; use `core.storage.fetch()`.
 

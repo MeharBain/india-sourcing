@@ -541,3 +541,57 @@ web-capable agent. Codex is not involved until Day 6.
 - ADR-019: classification by name shape is recorded as low-confidence inference, never as
   fact, because a confident company-as-person error would silently corrupt the incorporation
   watchlist.
+
+---
+
+## 2026-09-10 — task 012 non-instantiating connector registration
+
+**Branch / commits:** task/012-non-instantiating-registry, this commit
+**Prompt used:** `docs/tasks/012-non-instantiating-registry.md`
+
+**Changed**
+- Changed connector discovery and `REGISTERED_CONNECTORS` to hold concrete connector classes,
+  preserving class-level empty-key and duplicate-key validation without calling constructors.
+- Moved connector construction into the orchestrator's guarded per-source run, after resolving
+  the source row by the connector class's key, so construction failures update source health
+  and do not prevent healthy connectors from running.
+- Updated cross-connector contracts to instantiate at test execution time and retained the
+  real BIRAC BIG fixture assertion for all 102 signals.
+- Added ADR-020 and strengthened AGENTS.md rule 5 to make non-instantiating registration and
+  construction-time failure isolation explicit repository invariants.
+- No database model or migration changed; the task changes object lifecycle around the
+  existing task-006 source-health columns.
+
+**Tests proving it**
+- Pre-change `uv run pytest` — 83 passed. Pre-change `uv run ruff check .` — all checks passed.
+- Test-first focused run — 9 failed and 4 passed. The failures proved constructors still ran
+  during discovery/import and the orchestrator had not yet adopted connector classes.
+- `test_registry_discovers_concrete_connector_subclasses`,
+  `test_registry_rejects_empty_class_key_without_instantiating`, and
+  `test_registry_rejects_duplicate_class_keys_without_instantiating` use constructors that
+  raise if called, proving registration and key validation do not instantiate.
+- `test_importing_registry_does_not_instantiate_connectors` patches the real
+  `BiracBigConnector.__init__` to raise `RuntimeError("scoring config malformed")`, removes the
+  package from `sys.modules`, and proves a fresh `src.connectors` import still succeeds.
+- `test_construction_failure_does_not_stop_other_connectors_and_records_health` proves the
+  healthy connector emits its signal while the failed source becomes `failed`, increments
+  consecutive failures from 2 to 3, and stores the constructor error in `last_error`.
+- Existing task-004 tests `test_discover_failure_does_not_stop_other_connectors_and_records_health`,
+  `test_parse_failure_does_not_stop_other_connectors_and_records_health`, and
+  `test_three_consecutive_failures_then_success_resets_source_health` now pass connector classes
+  because `run_connectors()` owns construction. Their behavioral assertions were not weakened.
+- Post-change `uv run pytest` — 87 passed. `uv run ruff check .` — all checks passed.
+
+**Behavioural/proxy disclosure**
+- These are direct unit and contract tests of registry import, connector lifecycle, and health
+  mutation behavior; no proxy test was added.
+
+**Unfinished**
+- Merge and push are intentionally deferred for pre-merge review under the code-task policy.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- ADR-020: connector registration is non-instantiating, and construction occurs inside the
+  orchestrator's per-source failure boundary.

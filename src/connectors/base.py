@@ -61,8 +61,10 @@ def _connector_classes(module: ModuleType) -> Iterable[type[Connector]]:
             yield candidate
 
 
-def discover_connectors(package_name: str = "src.connectors") -> tuple[Connector, ...]:
-    """Import connector modules and instantiate every concrete Connector subclass."""
+def discover_connectors(
+    package_name: str = "src.connectors",
+) -> tuple[type[Connector], ...]:
+    """Import connector modules and register every concrete Connector subclass."""
 
     package = importlib.import_module(package_name)
     modules = [package]
@@ -72,18 +74,17 @@ def discover_connectors(package_name: str = "src.connectors") -> tuple[Connector
                 continue
             modules.append(importlib.import_module(module_info.name))
 
-    registry: dict[str, Connector] = {}
+    registry: dict[str, type[Connector]] = {}
     for module in modules:
         for connector_class in _connector_classes(module):
-            connector = connector_class()
-            if not connector.key.strip():
+            if not connector_class.key.strip():
                 raise ValueError(f"{connector_class.__name__}.key cannot be empty")
-            if connector.key in registry:
-                other = registry[connector.key]
+            if connector_class.key in registry:
+                other = registry[connector_class.key]
                 raise ValueError(
-                    f"Duplicate connector key {connector.key!r}: "
-                    f"{other.__class__.__name__} and {connector_class.__name__}"
+                    f"Duplicate connector key {connector_class.key!r}: "
+                    f"{other.__name__} and {connector_class.__name__}"
                 )
-            registry[connector.key] = connector
+            registry[connector_class.key] = connector_class
 
     return tuple(registry[key] for key in sorted(registry))
