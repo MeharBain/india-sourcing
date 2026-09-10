@@ -451,3 +451,262 @@ State them in any writeup rather than pretending they aren't there.
   if it also surfaces 500 grantees who never raise. Precision needs a separate test.
 - **Publication lag on patents** means recent-filing signals are structurally undetectable
   today, so patent lead time will be understated for the newest companies.
+
+---
+
+# Back-test: BIG-21 cohort outcomes
+
+Started 2026-09-10. **In progress — 2 of 51 checked.** BIG-21 awarded 2022, so four years of
+runway. BIG-24 (2024) is too recent to be informative; BIG-18 and BIG-19 (both 2021) are the
+natural extension if the signal looks strong.
+
+Direction is correct: start from the awardee list, follow forward to outcomes. This measures
+**precision** — what fraction of grantees raise — which is the opposite of the lead-time test
+above and the question that decides whether a digest is worth opening.
+
+## Checked
+
+### 1. Theranautilus Private Limited — HIT
+
+`BIRAC/CCAMP01937/BIG-21/22`, score 73.19, Medical Devices. C-CAMP partner.
+
+IISc spin-off founded 2020 by Prof. Ambarish Ghosh, Dr Debayan Dasgupta and Dr Peddi Shanmukh
+Srinivas. Magnetically-controlled nanorobots for dental hypersensitivity.
+
+**Raised $1.2M seed led by pi Ventures, November 2024**, at a ₹60 Cr valuation, with Golden
+Sparrow Ventures and angels including Tracxn's Abhishek Goyal and Groww's Lalit Keshre. Five
+patents secured. Human trials planned 2025.
+
+**BIG award (2022) → institutional seed (Nov 2024) = ~2.5 years.**
+
+### 2. Raycura Medical Technologies Private Limited — PARTIAL / grant treadmill
+
+`BIRAC/SINE0489/BIG-21/22`, score 69.99, Medical Devices. SINE IIT Bombay partner.
+
+Nagpur-based, founders Rohan Deshpande and Ayush Gaikwad. Product BETTER, a rehabilitation
+device for stroke and paralysis recovery.
+
+**No institutional equity round found.** In January 2026 it won IIT Bombay TIH's ATMAN 3.0
+accelerator and was recommended for up to ₹1 Cr of seed support, subject to evaluation. That is
+government money under NM-ICPS, not private capital.
+
+**Four years post-BIG, still non-dilutive.** This is the category that makes precision the
+binding constraint.
+
+---
+
+## Findings so far
+
+### The BIG→raise gap is much shorter than the incorporation→raise gap
+
+Theranautilus: BIG 2022 → seed Nov 2024, **2.5 years**. The lead-time test above measured
+*incorporation* → first institutional round and found 5–13 years. Those are different
+quantities and the tracker cares about the **grant→raise** interval, since the grant is what it
+observes.
+
+Implication for the readiness model: the window after a BIG award may be far tighter than
+ADR-015 implies. Do not rebuild the timing curve on either number until more of this cohort is
+checked — but note that ADR-015's 5–13 year figure answers a question the product does not
+actually ask.
+
+### Two distinct outcome classes, not a binary
+
+Not raised / raised is the wrong frame. There are at least three:
+
+1. **Raised institutional equity** (Theranautilus)
+2. **Grant treadmill** — alive, progressing, winning further government programmes, no private
+   capital (Raycura)
+3. **Dormant or dead** — none confirmed yet
+
+Class 2 is the precision problem in concrete form. Raycura looks *successful* by every
+government metric and would score well on any grant-and-incubator-based model. The readiness
+model must separate class 1 from class 2, and grant wins cannot be the discriminator, because
+class 2 is defined by accumulating them.
+
+### New readiness-signal source: Technology Innovation Hub accelerators
+
+IIT Bombay's TIH runs **ATMAN**, an eight-week accelerator for hardware-heavy healthtech. ATMAN
+3.0 took 173 applicants, accelerated 13, and recommended 6 for up to ₹1 Cr each on Demo Day
+(January 2026). Coverage frames these programmes explicitly as validating technology *before*
+private capital enters.
+
+That is a selection event with a published shortlist, a published winner list, and a stated
+position immediately upstream of institutional rounds. `config/sources.yaml` lists Technology
+Innovation Hubs in Tier 1 but records nothing about their accelerator programmes. Worth
+promoting and specifying properly.
+
+Caveat from Raycura: winning ATMAN is *not* evidence of imminent private capital. It may equally
+mark the grant treadmill. Which of the two it predicts is answerable only from a larger sample.
+
+### Methodological trap: aggregator "institutional investors" includes government
+
+Tracxn reports Raycura as having raised over 3 rounds with 3 institutional investors. The only
+funding traceable is BIRAC and TIH money. **Round counts and investor counts in aggregator
+profiles cannot be used as evidence of private backing.** Every outcome must be confirmed
+against a named private investor and a dated announcement.
+
+This matters beyond the back-test: any future automated outcome-tracking must not treat
+aggregator round counts as a raise signal.
+
+---
+
+## Remaining
+
+49 of 51 BIG-21 awardees unchecked. Eight remaining in Medical Devices: Magnimous Info Tech,
+Dr Deepak Agrawal, Imrobonix, FeetWings, SunQulp Tech, Dr Prithvi Rathi, Dverse Technologies,
+Babycue. Then Diagnostics (9), Industrial Biotechnology (9), Agriculture (14), Drugs (9).
+
+Record for each: outcome class (1/2/3), named private investor and date if class 1, and any
+publicly observable event in the 12 months before the raise. That last column is the readiness
+model.
+
+## Batch 2 — Medical Devices continued (4 of 51 checked)
+
+### 3. Magnimous Info Tech Private Limited — NO PUBLIC OUTCOME FOUND
+
+`BIRAC/SINE0492/BIG-21/22`, score **77.86 — the highest in the Medical Devices cohort**. SINE
+IIT Bombay partner.
+
+No funding announcement, no product news, no press. Absence of search results is not proof of
+failure, so this is recorded as *not found* rather than class 3. Needs an MCA status check to
+distinguish dormant from quietly operating.
+
+### 4. Imrobonix Private Limited — CLASS 2, award treadmill
+
+`BIRAC/FITT01170/BIG-21/22`, score 72.21. FITT IIT Delhi partner.
+
+Incorporated **3 January 2022**, ROC Chennai, registered in Tenkasi/Tirunelveli, Tamil Nadu.
+Founded by Iyyappan Madasamy; LinkedIn dates activity from 2020, so incorporation postdates
+founding as usual. Product SurgiKot, a thumb/joystick-controlled handheld robotic surgical
+device for laparoscopy.
+
+Active and visible: StartupTN and AIC Anna University ecosystem, and in **June 2026** it won the
+TT Jagannathan Safety Through Innovation Award at Startup Singam Season 2. A Crunchbase profile
+exists with no funding recorded.
+
+Four years post-BIG, collecting awards, no private capital traceable. Same shape as Raycura.
+
+---
+
+## Finding: BIRAC's own expert score does not predict institutional raise
+
+| Awardee | TEP score | Outcome |
+|---|---|---|
+| Magnimous Info Tech | **77.86** (highest) | Nothing found |
+| Theranautilus | 73.19 | **Raised $1.2M seed** |
+| Imrobonix | 72.21 | Award treadmill |
+| Raycura | 69.99 | Grant treadmill |
+
+The single company that raised sits **third of four** on BIRAC's score, and the top-scoring
+awardee has no traceable outcome at all.
+
+n=4, so this is an observation and not a result. But it matters because `PRD.md` and
+`config/sources.yaml` both record the Final Score column as "BIRAC's own quality ranking, free"
+— implying it is a usable input. On this evidence it may rank technical merit at the proposal
+stage while carrying no information about fundability, which is a different question assessed
+years earlier by a panel judging science rather than commercial trajectory.
+
+**Do not build the score into the scoring model** until the full cohort is checked. If the
+pattern holds, it belongs in the payload as provenance, not as a component weight.
+
+## Finding: SINE now runs its own VC fund
+
+SINE self-reports 245 startups incubated, $942M raised collectively, $3.56Bn aggregate
+valuation, and an 80% survival rate against a claimed 20% industry average. It has launched the
+**Y Point Venture Capital Fund at roughly ₹250 Cr**, investing in ventures from IIT Bombay and
+other research institutions.
+
+Competitive implication worth recording: the incubator best positioned to see its own portfolio
+early now has capital to act on it. For SINE-incubated companies specifically, a tracker
+watching the same signals is downstream of an insider with a fund. That does not apply to
+BIRAC's other seven partners, but it is a reason to weight partner identity rather than treat
+all eight as equivalent.
+
+## Running tally — 4 of 51
+
+| Class | Count |
+|---|---|
+| 1 — raised institutional equity | 1 |
+| 2 — grant/award treadmill | 2 |
+| 3 — dormant or dead | 0 confirmed |
+| Not found | 1 |
+
+Too early for a rate. Note that class 2 is currently double class 1, and that class 2 companies
+are the ones a grant-signal-driven digest would surface most confidently.
+
+---
+
+## REFRAME 2026-09-10: the product is a deal sourcer, not a funding predictor
+
+Product owner correction, and it invalidates how this back-test was being scored.
+
+Classes 1 and 2 were framed as hit and false positive. That is backwards. A company with
+credible technical validation and **no** private capital is the target, not the error. A tracker
+that only surfaced companies which had already raised would be Tracxn with a lag.
+
+**Revised definition.** The product surfaces deeptech companies with credible technical
+validation that private capital has not yet reached, and presents enough evidence per company
+for a human to decide whether to take a meeting. It does not predict funding events.
+
+**What survives the reframe.** The ranking problem. ~800 live BIG-grantee entities at steady
+state, and a four-year-old with no website, one founder and no patents is not the same
+proposition as an eighteen-month-old with five patents and a working device. Both are "grants,
+no VC." The discriminator stops being *probability of raising* and becomes *strength of the
+investment case* — which is assembling evidence rather than predicting an event, and is a far
+more tractable problem. This is why the readiness model felt intractable: it was the wrong task.
+
+**What this back-test can and cannot measure.** "Raised" is publicly observable; "investable" is
+not. So outcome-tracing cannot measure the thing that matters. What it *can* measure is whether
+the sources assemble a complete enough dossier per company to support the decision. That is the
+revised purpose from here.
+
+**Consequence for the BIRAC score finding above.** Less damaging than stated. If the score is
+not being used to predict raises, a panel score ranking technical merit remains a legitimate
+input to an investment case. Keep it; do not weight it as a raise predictor.
+
+---
+
+## CRITICAL FINDING: individual awardees are frequently unresolvable by name
+
+Attempted dossier: **Dr. Deepak Agrawal**, `BIRAC/FITT01189/BIG21/22`, score 74.57, Medical
+Devices, FITT (IIT Delhi) partner.
+
+Search returns at least four distinct people of that name:
+
+- Deepak Agrawal — IIM Bangalore, Faridabad, "Stealth Startup"
+- Deepak Agrawal — IIT Bombay, Computational Technology and Medicine Lab, Cambridge-educated
+- Prof Deepak Agrawal — AIIMS New Delhi, professor of neurosurgery, describes himself as a
+  medical device co-inventor, Wikipedia entry, born 1970
+- Deepak Agrawal — AI and data analytics, unrelated
+
+The AIIMS neurosurgeon is the most plausible match: Delhi, medical devices, inventor, and
+AIIMS–IIT Delhi collaboration is routine. **Plausible is not resolved.** Assigning the wrong
+person to a watchlist entry is worse than leaving it blank.
+
+### Why this matters more than any other finding
+
+Roughly **35% of BIG awardees are individuals** (measured on BIG-24). ADR-017 makes the
+individual-awardee watchlist the product's most defensible feature, on the basis that BIRAC
+contractually obliges faculty and individual awardees to incorporate within the 18-month grant
+term — giving a known founder name, a known window, and a predictable MCA incorporation event.
+
+That only works if the name resolves to a person. For common Indian names it does not.
+
+### What actually disambiguates
+
+1. **The BIG partner prefix**, which the task-008 parser already extracts. `FITT` narrows to
+   IIT Delhi's orbit — institution and geography. Real information, insufficient alone.
+2. **MCA DIN lookup by director name**, returning the full directorship network. This is the
+   disambiguator, and it is the paid API flagged in `config/sources.yaml` as the keystone for
+   `mca_director_lookup`. That entry was written on reasoning; it is now concretely justified.
+3. **Google Scholar / institutional affiliation**, which worked for Innovodigm's Jhimli Manna
+   because the technology was distinctive. Weaker for common names.
+
+### Consequence
+
+Individual awardees are **not shortlist-ready without enrichment**. They should enter the graph
+and the watchlist, but must not reach a shortlist until a name is resolved to a specific person
+with a DIN or an unambiguous institutional affiliation.
+
+This is a third, independent argument for the low-confidence design in task 010 and ADR-019 —
+arrived at from name ambiguity rather than from classification uncertainty.
