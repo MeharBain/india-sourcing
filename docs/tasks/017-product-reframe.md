@@ -280,10 +280,7 @@ test, migration or research-source document has changed.
 Blocker accepted. Option 1 approved with a refinement: the output is a shortlist and the digest
 is its delivery vehicle. Replace section 3 principle 3 exactly with:
 
-> Broad collection, narrow promotion. Everything enters the graph. Only entities passing the
-> hard gate in docs/SHORTLIST_SCHEMA.md reach a shortlist. The gate requires resolved identity,
-> an evidenced description, at least one validation signal beyond the grant itself, and known
-> capital status.
+> 3. **Broad collection, narrow promotion.** Everything enters the graph. Only entities passing the hard gate in `docs/SHORTLIST_SCHEMA.md` reach a shortlist. The gate requires resolved identity, an evidenced description, at least one validation signal beyond the grant itself, and known capital status.
 
 “Corroborated” is deliberately dropped. Corroboration remains a scoring component, while the
 gate's validation-signal requirement already expresses it; duplicating it invited confusion.
@@ -297,3 +294,82 @@ existing criterion, Codex has standing authority in this task to replace unambig
 prediction-era PRD wording with its obvious evidence-framing equivalent and report it. Raise
 another blocker only if the correct replacement requires a genuine product decision. This
 standing authority applies only to prediction vocabulary in `PRD.md` for task 017.
+
+### Resume implementation record — Codex, 2026-09-11
+
+The task branch was fast-forwarded to current `main` after commit `b6e4f31` had already landed.
+The expanded sweep was then run once before the follow-up edits and once after them. Each result
+below is one matching line from the full-document, case-insensitive search.
+
+#### Expanded pre-edit sweep, hit by hit
+
+- Line 16, `prediction` — **correct as-is**; it states the approved discovery positioning.
+- Line 22, `predict` — **correct as-is**; it explicitly says the product does not predict funding events.
+- Line 23, `false positive` — **correct as-is**; it states that grant-funded companies without institutional equity are targets.
+- Line 168, `prediction` — **corrected by this task under the standing wording authority**; the BIRAC row now states its dossier-evidence role directly.
+- Line 170, `prediction` / `raise` — **corrected by this task under the standing wording authority**; the NIDHI-SSS row now states its evidence directly.
+- Line 175, `predictor` — **correct as-is**; criterion 5 requires the BIG score to be evidence rather than a weighted predictor.
+- Line 177, `raised` — **correct as-is**; it is the factual Theranautilus back-test outcome.
+- Line 178, `predictive` — **correct as-is**; it says n=4 cannot establish predictive value.
+- Line 304, `readiness` — **correct as-is**; it records that the component is retired, not deferred.
+- Line 306, `prediction` — **correct as-is**; it distinguishes evidence assembly from the retired product framing.
+- Line 312, `raise` — **correct as-is**; it is the ordinary verb meaning increase corroboration.
+- Line 347, `readiness` — **correct as-is**; the heading labels required historical context for the retired component.
+- Line 349, `predict` / `raise` — **correct as-is**; the sentence records what the retired component attempted.
+- Line 350, `clock` — **correct as-is**; the funding-clock reference is required historical context for why the component was disabled.
+- Line 355, `predicting` — **correct as-is**; it records the deeper wrong-task reason for retirement.
+- Line 358, `timing` — **correct as-is**; it contrasts dossier evidence with the retired timing model.
+- Line 381, `raised` — **correct as-is**; known institutional capital is a valid shortlist suppressor.
+- Line 386, `raised` — **correct as-is**; it is the factual Ayati Devices example showing age is not a useful suppressor.
+- Line 470, `raise` — **correct as-is**; criterion 2 explicitly excludes subsequent raises as a metric.
+- Line 471, `prediction` — **correct as-is**; it explains that exclusion.
+- Line 481, `Precision@10` — **correct as-is**; it labels a human-interest supporting metric, not funding-event prediction.
+- Line 554, `readiness` — **correct as-is**; the resolved risk records the superseded framing historically.
+
+No pre-edit hit required a product decision. The two source-row substitutions were mechanical
+evidence-framing replacements covered by the task-scoped standing authority.
+
+#### Expanded post-edit sweep, hit by hit
+
+- Line 16, `prediction` — **correct as-is**; approved discovery positioning.
+- Line 22, `predict` — **correct as-is**; explicit product boundary.
+- Line 23, `false positive` — **correct as-is**; explicit target definition.
+- Line 172, `predictor` — **correct as-is**; criterion 5's evidence-versus-predictor distinction.
+- Line 174, `raised` — **correct as-is**; factual Theranautilus outcome.
+- Line 175, `predictive` — **correct as-is**; n=4 evidence caveat.
+- Line 301, `readiness` — **correct as-is**; retired-component statement.
+- Line 303, `prediction` — **correct as-is**; evidence-assembly distinction.
+- Line 309, `raise` — **correct as-is**; ordinary verb meaning increase.
+- Line 344, `readiness` — **correct as-is**; historical retirement heading.
+- Line 346, `predict` / `raise` — **correct as-is**; historical description of the retired component.
+- Line 347, `clock` — **correct as-is**; historical funding-clock explanation.
+- Line 352, `predicting` — **correct as-is**; wrong-task retirement rationale.
+- Line 355, `timing` — **correct as-is**; historical contrast with dossier evidence.
+- Line 378, `raised` — **correct as-is**; valid known-capital suppressor.
+- Line 383, `raised` — **correct as-is**; factual Ayati Devices example.
+- Line 467, `raise` — **correct as-is**; explicitly excluded metric.
+- Line 468, `prediction` — **correct as-is**; reason for that exclusion.
+- Line 478, `Precision@10` — **correct as-is**; human-interest supporting metric.
+- Line 551, `readiness` — **correct as-is**; historical wording in a resolved risk.
+
+The post-edit sweep has no hits for `probability`, `window`, `forecast`, `likely`, `approaching`,
+`when they` or `about to`; no blocker remains.
+
+Final verification: `uv run pytest` passed all 117 tests in 8.84 seconds, and
+`uv run ruff check .` reported `All checks passed!`.
+
+#### Review rework authority and dependent cleanup
+
+The user explicitly authorized deleting the obsolete opening Task 017 entry from
+`docs/CONTEXT.md` section 3 in the same commit as the resolved third blocker; commit `c937113`
+did so and preserved every other context entry. Independent review then identified two dependent
+current-state defects created or exposed by the reconciliation. Rework cycle 1 mechanically
+replaced section 1's dangling `see section 3` reference with ADR-016, and rewrote section 3's
+stale claim that PRD Phase 0 was pending while preserving the accepted decision that the broader
+section 13 phase plan remains deferred. The same review rework deleted obsolete top-level
+Current phase, Next task and Gate status sections from `PROGRESS.md` rather than inventing new
+current-state claims; open questions and session history remain intact.
+
+Review-rework verification: `uv run pytest` passed all 117 tests in 6.59 seconds, and
+`uv run ruff check .` reported `All checks passed!`. The expanded PRD sweep was rerun with the
+same matches and line numbers recorded above.

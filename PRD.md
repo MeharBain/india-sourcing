@@ -61,10 +61,7 @@ fragmented and unglamorous.* The difficulty of the work is the moat.
    No field exists without it. This is a sales feature, not just hygiene.
 2. **Corroboration beats volume.** A company appearing in two independent source families
    is worth more than the sum of both. Scoring reflects this explicitly.
-3. Broad collection, narrow promotion. Everything enters the graph. Only entities passing the
-   hard gate in docs/SHORTLIST_SCHEMA.md reach a shortlist. The gate requires resolved identity,
-   an evidenced description, at least one validation signal beyond the grant itself, and known
-   capital status.
+3. **Broad collection, narrow promotion.** Everything enters the graph. Only entities passing the hard gate in `docs/SHORTLIST_SCHEMA.md` reach a shortlist. The gate requires resolved identity, an evidenced description, at least one validation signal beyond the grant itself, and known capital status.
 4. **Shared graph, tenant-scoped workflow.** Company and signal data is shared. Scores,
    notes, status and review events are per-tenant. `tenant_id` present from migration one.
 5. **Human-in-the-loop entity resolution.** Auto-merge above threshold, review queue below.
@@ -165,9 +162,9 @@ Consequences, reflected below and in section 7:
 
 | Source | Signal | Notes |
 |---|---|---|
-| BIRAC BIG grantees | Technical validation through panel selection plus ₹50L non-dilutive funding | Administered via partner incubators (C-CAMP, IKP, Venture Center, FITT). This is dossier evidence, not a funding-event prediction. Lists are scattered across partners, not centralised. |
+| BIRAC BIG grantees | Technical validation through panel selection plus ₹50L non-dilutive funding | Dossier evidence of technical validation and non-dilutive backing. Administered via partner incubators (C-CAMP, IKP, Venture Center, FITT); lists are scattered across partners, not centralised. |
 | BIRAC SEED / LEAP / PACE | Later-stage BIRAC support | Company already past ignition |
-| DST NIDHI-SSS (Seed Support) | Largest non-dilutive commitment among NIDHI variants | Evidence of the strongest incubator conviction, not a prediction that the company will raise |
+| DST NIDHI-SSS (Seed Support) | Largest non-dilutive commitment among NIDHI variants | Dossier evidence of the strongest incubator conviction and scale of non-dilutive support among NIDHI variants |
 | iDEX / SPRINT winners | Defence deeptech | Small lists, very high hit rate |
 | Technology Innovation Hubs (NM-ICPS) | 25 hubs at IITs/IISc funding startups (ARTPARK, C3iHub etc.) | Publish portfolios, structurally underused |
 | TDB (Technology Development Board) | Commercialisation-stage support | Larger cheques, later stage |

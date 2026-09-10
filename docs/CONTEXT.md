@@ -31,7 +31,7 @@ to decide whether to take a meeting.
 
 **It does not predict funding events.** A company living on non-dilutive grants with no
 institutional equity is the target, not a false positive. This was a correction to an earlier
-framing — see section 3.
+framing — see ADR-016.
 
 v1 scope is bio and medtech only (ADR-014). The architecture stays sector-agnostic.
 
@@ -63,21 +63,6 @@ Roughly 117 tests. Migration head as of writing: `9d6f1e2a4b80`.
 ## 3. What is stale or contradictory RIGHT NOW
 
 The most important section. An agent that reads the PRD without this will build the wrong thing.
-
-### Task 017 is blocked, so the PRD still contradicts the product
-
-The product was reframed from *predicting which companies will raise* to *assembling evidence
-so a human can decide*. Task 017 reconciles the PRD with that and **has not landed**. It is
-blocked three times over, each time because the reframe alters the document's whole vocabulary
-rather than a few paragraphs.
-
-Until it lands, **PRD sections 3, 5, 8, 13 and 14 still contain prediction-era language**:
-a "funding clock", NIDHI-SSS "will raise", readiness described as a temporarily disabled
-component that will be "restored", "in-window entities", and a risk row calling failure to
-predict readiness fatal.
-
-Treat all of it as superseded. `docs/SHORTLIST_SCHEMA.md` and `docs/FEASIBILITY_TEST.md` are the
-current framing.
 
 ### `docs/tasks/README.md` does not require the `## Interpretations` section
 
@@ -112,10 +97,11 @@ not that they fire. The task-006 CHECK constraint test runs against in-memory SQ
 production is Postgres. Both had real behaviour confirmed manually against Neon, once,
 unrepeatably. They need an integration suite excluded from the default run, once CI exists.
 
-### PRD section 13's build plan predates everything
+### PRD section 13's broader build plan remains deferred
 
-Phases still describe Phase 0 as pending and carry a superseded decision rule. Deferred twice.
-Do not follow it.
+Task 017 reconciled the completed feasibility back-test and the Phase 5–6 completion gates, but
+the broader phase plan predates the implemented sequence and remains deferred. Do not treat it
+as the current project schedule.
 
 ---
 

@@ -16,27 +16,6 @@ it at the end. Do not delete history — the log is the point.
 
 Newest entries at the bottom.
 
----
-
-## Current phase
-
-**Phase 0 — feasibility and source audit.** No code yet.
-
-## Next task
-
-Lead-time feasibility test (see `docs/CODEX_KICKOFF.md`, Week 1 Days 1–2). Delegate to a
-web-capable agent. Codex is not involved until Day 6.
-
-## Gate status
-
-| Gate | Status | Notes |
-|---|---|---|
-| Lead-time test: 15+/20 with meaningful lead | complete | n=3 found a five-to-thirteen-year gap from incorporation to first institutional round; detection has ample lead but readiness ranking is the constraint. |
-| Readiness model validated against first institutional equity rounds | not started | The former timing component is disabled at weight 0 until this is built from data. |
-| Fixtures committed for BIG-24 and BIG-21 | not started | BIG-24 confirmed fetchable and text-extractable |
-| MCA bulk snapshot freshness verified | not started | Read "as on 30 June 2025" on 2026-09-01. If genuinely stale, watchlist design changes. |
-| Vertical slice usable on real data (Day 14) | not started | The real gate. Do not build more connectors before this. |
-
 ## Open questions blocking work
 
 1. Is the MCA bulk release genuinely over a year stale, or is the CDM portal just showing an
@@ -1008,6 +987,16 @@ web-capable agent. Codex is not involved until Day 6.
   in section 14; the broader phase plan remains deferred.
 - Updated this file's Current position to describe the implemented pipeline and deal-sourcing
   product accurately.
+- Applied the third blocker's replacement with its exact Markdown emphasis and schema link, and
+  deleted the now-false Task 017 warning that opened `docs/CONTEXT.md` section 3 while preserving
+  every other context entry.
+- Used the task-scoped wording authority for two mechanical section 5 substitutions: the BIRAC
+  BIG and NIDHI-SSS rows now state their dossier-evidence roles directly instead of describing
+  them through negated prediction language.
+- Review rework removed obsolete top-level Current phase, Next task and Gate status sections
+  rather than inventing replacements; preserved the current open questions and all session
+  history. It also repaired the two dependent `docs/CONTEXT.md` references exposed by the
+  authorized Task 017 warning deletion.
 
 **Consistency sweeps**
 - The original pre-edit sweep searched `predict`, `readiness`, `raise`, `raised`, `precision`,
@@ -1018,14 +1007,14 @@ web-capable agent. Codex is not involved until Day 6.
 - A follow-up vocabulary check found section 3's `in-window` rule outside that list and triggered
   the second blocker. Its approved replacement was applied exactly, and criterion 7 was expanded
   with `window`, `clock`, `timing`, `forecast`, `likely`, `approaching`, `when they` and `about to`.
-- The final expanded sweep found only correct hits: anti-prediction positioning at lines 16,
-  22–23; approved source/score evidence at 168, 170 and 175–178; retirement and historical context
-  at 304–306 and 347–358; ordinary “raise” at 312; the valid capital suppressor and factual example
-  at 381 and 386; explicit non-metric wording at 470–471; human-interest Precision@10 at 481; and
-  the negated old framing in the resolved risk at 554. No blocker remained.
+- The resumed expanded pre-edit and post-edit sweeps are recorded hit by hit in the task file.
+  The pre-edit pass found two mechanical source-row wording substitutions and no product blocker.
+  The post-edit pass found only correct product-boundary, historical, factual, suppressor, and
+  human-interest-metric uses; it had no hits for `probability`, `window`, `forecast`, `likely`,
+  `approaching`, `when they` or `about to`.
 
 **Verification**
-- `uv run pytest` — 117 passed in 5.59 seconds.
+- Final review-rework verification: `uv run pytest` — 117 passed in 6.59 seconds.
 - `uv run ruff check .` — all checks passed.
 - `ranking probability` does not occur in `PRD.md`.
 
