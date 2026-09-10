@@ -830,3 +830,82 @@ web-capable agent. Codex is not involved until Day 6.
 **Decisions promoted to docs/DECISIONS.md**
 - ADR-022: signal classification review is global, signal-scoped, and overrides rather than
   mutates the parser's original classification.
+
+---
+
+## 2026-09-10 — task 014 minimal entity resolution
+
+**Branch / commits:** `task/014-minimal-resolution`, this commit
+**Prompt used:** `docs/tasks/014-minimal-resolution.md`, including the criterion 7 amendment
+
+**Changed**
+- Implemented punctuation-insensitive, casefolded exact-name normalization with repeated removal
+  of private-limited, Pvt Ltd, LLP and OPC legal suffixes, including compound OPC Private Limited.
+- Added a deterministic resolution pass over persisted signals. Company classes create or reuse a
+  company and alias; confident people create or reuse a person and a signal-linked watchlist row.
+- Added classification-review routing and overrides. New ambiguous and below-threshold signals
+  get one pending review; existing pending and undecidable reviews create nothing; resolved
+  reviews replace the parser class for resolution.
+- Added `python -m src.cli resolve`, which reads the existing configured review threshold and
+  reports rows created by the pass.
+- The pass loads existing reviews before processing and checks by `signal_id`, so reruns skip
+  review insertion rather than raising the unique constraint.
+
+**Tests proving it**
+- Pre-change `uv run pytest` — 103 passed. The test-first focused run failed at collection because
+  `resolve_signals` did not exist. Post-change `uv run pytest` — 113 passed.
+- `test_normalize_name_strips_legal_suffixes_and_punctuation` covers Private Limited, Pvt Ltd,
+  `Pvt.Ltd.`, LLP, OPC, compound OPC Private Limited, casefolding, whitespace and punctuation.
+- `test_resolution_creates_entities_watchlist_and_cross_cohort_match` covers company creation,
+  person plus watchlist creation, two cohorts matching one normalized company, two review reasons,
+  below-threshold non-creation, and a second pass creating nothing.
+- `test_resolved_review_overrides_signal_type` gives a company-class signal a resolved `person`
+  override and proves a person and watchlist—not a company—are created.
+- `test_pending_and_undecidable_reviews_create_nothing_or_requeue` proves both states create no
+  entity and neither adds another review across two passes.
+- `uv run ruff check .` — all checks passed before and after.
+- `AGENTS.md` names `tests/fixtures/resolution_pairs.json` for before/after accuracy reporting,
+  but that path is absent from the repository. No labelled accuracy number could be run or
+  invented; this task changes only exact matching and does not implement or widen a fuzzy
+  threshold.
+
+**Neon resolution run**
+- Baseline counts `(company, person, alias, watchlist, classification_review, company_id set,
+  company_id null)` were `(0, 0, 0, 0, 0, 0, 102)`.
+- After the first pass they were `(65, 25, 65, 25, 12, 65, 37)`. The 12 reviews are all pending:
+  4 `ambiguous_class` and 8 `low_confidence`. All 12 reviewed signals have neither a company link
+  nor a watchlist row.
+- A captured rerun considered all 102 signals and created zero companies, people, aliases,
+  watchlist rows or classification reviews. Counts remained `(65, 25, 65, 25, 12, 65, 37)`.
+- The 65 committed `signal.company_id` assignments prove the production append-only trigger
+  permits ADR-013's resolution-owned mutation. `pg_get_triggerdef` confirms `company_id` is the
+  only signal column omitted from the trigger's protected UPDATE column list.
+- There were zero exact normalized-name matches across BIG-21 and BIG-24: zero companies and zero
+  people appeared in both cohorts. With no matches, there was nothing to eyeball for over-match.
+
+**Criterion 8 dual-spine finding**
+- `watchlist.awarding_signal_id` was sufficient to reach every resolved person: all 25 confident
+  person signals have exactly one watchlist row leading to a person. No required query was
+  impossible.
+- The asymmetry is materially awkward: `company_id IS NULL` reports 37 signals, but 25 are
+  resolved people and only 12 are unresolved classifications. Company cohort queries join signal
+  directly to company, while equivalent person queries must join signal → watchlist → person.
+  Reporting unresolved signals therefore requires checking both spines, not just the nullable
+  company foreign key.
+
+**Behavioural/proxy disclosure**
+- The synthetic tests exercise resolution behavior through an in-memory session double because
+  the production JSONB schema is intentionally PostgreSQL-only and tests cannot use the network.
+  The Neon runs directly proved PostgreSQL persistence, foreign keys, review uniqueness,
+  resolution-owned signal updates, and whole-pass idempotency.
+
+**Unfinished**
+- Fuzzy matching, candidate scoring, LLM adjudication, watchlist monitoring, enrichment and UI
+  remain intentionally out of scope. No parser, classifier or orchestrator changed.
+
+**Assumptions I had to make because the spec didn't say**
+- Newly resolved companies use `lifecycle_status = 'unknown'` because the award signals do not
+  establish a current registry status and the column has no specified vocabulary.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None. Task 015 and ADR-022 had already settled the classification-review design.

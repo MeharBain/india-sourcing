@@ -23,9 +23,11 @@ from src.connectors.birac_big.connector import (
 from src.connectors.orchestrator import run_connectors
 from src.core.models import RawDoc, Source, Tenant
 from src.core.storage import DEFAULT_STORAGE_DIR, ingest_bytes
+from src.resolve.decide import resolve_signals
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TENANT_NAME = "India sourcing"
+DEFAULT_SCORING_CONFIG = PROJECT_ROOT / "config" / "scoring.yaml"
 
 
 def _database_url() -> str:
@@ -81,6 +83,14 @@ def _raw_doc_count(session: Session, source_id: UUID) -> int:
     return int(session.exec(statement).one())
 
 
+def _review_confidence_threshold(path: Path = DEFAULT_SCORING_CONFIG) -> float:
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    threshold = float(config["review_confidence_threshold"])
+    if not 0.0 <= threshold <= 1.0:
+        raise ValueError("review_confidence_threshold must be between 0 and 1")
+    return threshold
+
+
 def run_offline_ingestion(
     *,
     tenant_name: str,
@@ -128,8 +138,33 @@ def run_offline_ingestion(
         return 0 if source.health_status == "healthy" else 1
 
 
+def run_resolution() -> int:
+    """Resolve persisted applicant signals into canonical entities."""
+    engine = create_engine(_database_url())
+    with Session(engine) as session:
+        summary = resolve_signals(
+            session=session,
+            review_confidence_threshold=_review_confidence_threshold(),
+        )
+
+    print(f"signals considered: {summary.signals_considered}")
+    print(f"companies created: {summary.companies_created}")
+    print(f"people created: {summary.people_created}")
+    print(f"company aliases created: {summary.aliases_created}")
+    print(f"watchlist rows created: {summary.watchlist_rows_created}")
+    print(f"classification reviews created: {summary.classification_reviews_created}")
+    return 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=("ingest", "resolve"),
+        default="ingest",
+        help="pipeline operation to run (default: ingest)",
+    )
     parser.add_argument(
         "--tenant-name",
         default=DEFAULT_TENANT_NAME,
@@ -146,6 +181,8 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "resolve":
+        return run_resolution()
     return run_offline_ingestion(
         tenant_name=args.tenant_name,
         fetched_at=datetime.now(UTC),

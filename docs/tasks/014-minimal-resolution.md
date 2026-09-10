@@ -1,6 +1,6 @@
 # 014 — Minimal entity resolution: signals to canonical entities
 
-**Status:** blocked
+**Status:** complete
 **Branch:** task/014-minimal-resolution
 **Depends on:** 013 merged, and 015 merged. Task 015 runs first.
 
@@ -58,7 +58,8 @@ normalisation works.
 ### The 12 below threshold
 
 4 `ambiguous` and 8 shape-only `person` signals. They must not silently create entities and
-must not silently vanish. Where they go is criterion 7 and may require a schema decision.
+must not silently vanish. Criterion 7 routes them to the `classification_review` table delivered
+by task 015.
 
 ---
 
@@ -95,15 +96,28 @@ must not silently vanish. Where they go is criterion 7 and may require a schema 
    in both cohorts.
 
 6. No entity is created for any signal below `review_confidence_threshold` or classed
-   `ambiguous`. Assert the count of such signals is 12 and that all 12 remain unresolved.
+   `ambiguous`. Assert the count of such signals is 12 and that all 12 remain unresolved. Each
+   of the 12 also has exactly one `classification_review` row.
 
-7. **The schema question this task exists to answer.** Report where the 12 unresolved signals
-   are recorded as needing review, and whether the schema supports it. Consider specifically:
-   `resolution_candidate` is keyed `(signal_id, company_id)` with a non-null `company_id`, so it
-   cannot represent "this signal has no candidate entity and needs a human to classify it."
+7. Every signal that is below `review_confidence_threshold` or classed `ambiguous` gets a
+   `classification_review` row with `status = 'pending'`. The reason is `ambiguous_class` for
+   the 4 ambiguous signals and `low_confidence` for the 8 shape-only person signals. Report the
+   counts per reason against Neon — expected 4 and 8.
 
-   If no table can express it, **raise a blocker** rather than inventing a column or writing the
-   state into a payload. This is a real design decision.
+7a. Resolution treats `classification_review` as an override, and handles all three states:
+
+   - `pending` → create no entity, leave the signal unresolved.
+   - `resolved` → create the entity using `resolved_class`, ignoring `signal.signal_type`.
+   - `undecidable` → create no entity, and do not re-queue it. A human has already looked.
+
+   No live row is resolved yet, so cover this with a synthetic resolved review whose
+   `resolved_class` differs from its signal's `signal_type`, and assert the entity created follows
+   the review rather than the signal. That test is the only proof the override works before real
+   decisions exist.
+
+7b. The resolution pass is re-runnable over reviewed signals — a second run creates no duplicate
+   `classification_review` row, which the unique constraint on `signal_id` should enforce.
+   Confirm it raises rather than silently skipping, or that the pass checks first. State which.
 
 8. **Report what the dual spine made awkward.** Specifically: `signal` has `company_id` but no
    `person_id`, so a person-class signal reaches its `person` row only through
@@ -140,9 +154,9 @@ PROGRESS.md
   resolution threshold to pass a test; the discipline starts by not having a threshold to widen.
 - **Auto-creating entities for the 12 low-confidence signals.** It would make the counts look
   complete and would defeat the entire point of task 010. Criterion 6 asserts against it.
-- **Inventing a column to park unresolved signals.** Criterion 7 asks for a blocker if the
-  schema cannot express the state. A `payload` key would violate the AGENTS.md rule that
-  `payload` holds extracted source content only.
+- **Inventing another place to park unresolved signals.** `classification_review` is the approved
+  destination. A `payload` key would violate the AGENTS.md rule that `payload` holds extracted
+  source content only.
 - **Over-matching on normalisation.** Stripping suffixes aggressively can collapse two genuinely
   different companies. Report any cross-cohort match and eyeball it — with only one source and
   102 signals, every match can be checked by hand.
@@ -213,3 +227,46 @@ reads it as an override. This preserves ADR-001, keeps the parser's original out
 record of what it said, and later gives a measurable comparison of parser output against human
 judgement. It is explicitly not an `extractor_version` bump — that corrects a parser for all
 rows; this is one human judging one row.
+
+### Amendment — Claude, 2026-09-10: criterion 7 now has an answer
+
+Task 015 delivered `classification_review`. Criterion 7 was written as a question that might
+block; it is now a population requirement.
+
+Replace criterion 7 with:
+
+Every signal that is below `review_confidence_threshold` or classed `ambiguous` gets a
+`classification_review` row with `status = 'pending'`. The reason is `ambiguous_class` for the 4
+ambiguous signals and `low_confidence` for the 8 shape-only person signals. Report the counts per
+reason against Neon — expected 4 and 8.
+
+Add criterion 7a: resolution treats `classification_review` as an override, and handles all
+three states:
+
+- `pending` → create no entity, leave the signal unresolved.
+- `resolved` → create the entity using `resolved_class`, ignoring `signal.signal_type`.
+- `undecidable` → create no entity, and do not re-queue it. A human has already looked.
+
+No live row is resolved yet, so cover this with a synthetic resolved review whose
+`resolved_class` differs from its signal's `signal_type`, and assert the entity created follows
+the review rather than the signal. That test is the only proof the override works before real
+decisions exist.
+
+Add criterion 7b: the resolution pass is re-runnable over reviewed signals — a second run creates
+no duplicate `classification_review` row, which the unique constraint on `signal_id` should
+enforce. Confirm it raises rather than silently skipping, or that the pass checks first. State
+which.
+
+Amend criterion 6 to add: each of the 12 also has exactly one `classification_review` row.
+
+Criterion 8 is unchanged and still wanted — it asks what the dual spine made awkward, and
+resolution will now actually exercise it.
+
+My sweep: criterion 7 was the only place the schema question appeared. `classification_review`
+did not appear in 014 before this amendment, since the table did not exist when it was written.
+
+Codex implementation sweep: two dependent active references also required amendment. “The 12
+below threshold” still said their destination might require a schema decision, and Risks still
+said criterion 7 should block if the schema lacked a destination. Both now name the task 015
+`classification_review` table. The original blocker and both Claude decisions remain unchanged as
+history.
