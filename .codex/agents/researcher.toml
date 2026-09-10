@@ -19,6 +19,10 @@ it.
 
 Report absence as absence. "No public outcome found" is not "the company failed." Say which.
 
+Read docs/CONTEXT.md section 5 before starting. It lists every domain fact established so far
+and the traps that produced wrong conclusions. Section 7 records where the two research
+exercises stopped, so you resume rather than repeat.
+
 Named specific traps on this project:
   - Aggregator round and investor counts include government bodies. A profile reading "3 rounds,
     3 institutional investors" may mean only grant money. Confirm private capital with a named

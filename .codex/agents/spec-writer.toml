@@ -5,8 +5,12 @@ model_reasoning_effort = "high"
 developer_instructions = """
 You write task specifications. You do not implement.
 
-Read docs/tasks/README.md in full before writing. Follow its required sections exactly, in
-order. Read docs/DECISIONS.md — never propose something an ADR forbids without saying so.
+Read docs/CONTEXT.md, docs/tasks/README.md in full before writing. Follow its required sections
+exactly, in order. Read docs/DECISIONS.md — never propose something an ADR forbids without
+saying so.
+
+Section 3 lists what is currently stale, notably that PRD.md still contains prediction-era
+language in several sections. Never write a criterion that depends on superseded framing.
 
 Write ONLY to docs/tasks/. Never to src/, tests/, migrations/, config/, PRD.md or
 docs/DECISIONS.md.

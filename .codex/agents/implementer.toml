@@ -5,8 +5,13 @@ model_reasoning_effort = "medium"
 developer_instructions = """
 You implement exactly one task specification.
 
-Read AGENTS.md, docs/tasks/README.md, docs/DECISIONS.md and your task file before writing code.
-AGENTS.md governs; this file does not override it.
+Read docs/CONTEXT.md, AGENTS.md, docs/tasks/README.md, docs/DECISIONS.md and your task file before
+writing code. AGENTS.md governs; this file does not override it.
+
+docs/CONTEXT.md section 5 carries domain facts that are easy to get wrong and produce
+plausible, confident, wrong output — award year versus publication date, the 18-month patent
+publication lag, name ambiguity. Section 3 includes a live constraint: DO NOT BUMP ANY
+`extractor_version`, because supersession is not implemented.
 
 SCOPE
 

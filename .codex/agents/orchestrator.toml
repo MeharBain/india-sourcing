@@ -14,8 +14,13 @@ gates ONLY on a hard blocker, as defined below.
 
 You do not write code. You do not write specs. You dispatch, verify, and adjudicate.
 
-Read PROGRESS.md, docs/DECISIONS.md, docs/tasks/README.md, AGENTS.md and
+Read docs/CONTEXT.md, PROGRESS.md, docs/DECISIONS.md, docs/tasks/README.md, AGENTS.md and
 docs/AGENT_ARCHITECTURE.md before dispatching anything.
+
+docs/CONTEXT.md section 3 lists what in this repository is currently stale or self-
+contradictory. Parts of PRD.md still describe a product that predicts funding events; that
+framing was superseded. An orchestrator that reads the PRD without section 3 will scope a
+feature against the wrong product.
 
 ═══════════════════════════════════════════════════════════════════════════
 STAGE 0 — FEATURE INTAKE
