@@ -17,6 +17,7 @@ from src.core.storage import (
     HttpConfigurationError,
     RobotsDeniedError,
     fetch,
+    ingest_bytes,
 )
 
 
@@ -285,6 +286,46 @@ def test_fetch_hashes_and_persists_bytes_without_duplicate_rows(tmp_path: Path) 
     assert first.content_hash == "58100dc8fc06562ce3e578231dc948e083520ee49c4b4ee5a5a28bb4b4003feb"
     assert Path(first.storage_path).read_bytes() == b"same bytes"
     assert Path(first.storage_path).is_relative_to(tmp_path)
+
+
+def test_ingest_bytes_persists_local_fixture_once_with_remote_provenance(
+    tmp_path: Path,
+) -> None:
+    fixture_path = tmp_path / "fixture.pdf"
+    fixture_path.write_bytes(b"committed fixture bytes")
+    storage_dir = tmp_path / "raw_docs"
+    session = FakeSession()
+    source_id = uuid4()
+    origin_url = "https://example.gov.in/original-document.pdf"
+    fetched_at = datetime(2026, 9, 10, 8, 30, tzinfo=UTC)
+
+    first = ingest_bytes(
+        content=fixture_path.read_bytes(),
+        source_id=source_id,
+        url=origin_url,
+        fetched_at=fetched_at,
+        session=session,
+        storage_dir=storage_dir,
+    )
+    second = ingest_bytes(
+        content=fixture_path.read_bytes(),
+        source_id=source_id,
+        url=origin_url,
+        fetched_at=fetched_at,
+        session=session,
+        storage_dir=storage_dir,
+    )
+
+    assert first is second
+    assert len(session.added) == 1
+    assert session.commits == 1
+    assert first.source_id == source_id
+    assert first.url == origin_url
+    assert first.fetched_at == fetched_at
+    assert first.http_status == 200
+    assert first.content_hash == "66e1b8eb7c897c53fb1180405acc82c3d562796352858bfa0d8467214f24f2d2"
+    assert Path(first.storage_path).read_bytes() == b"committed fixture bytes"
+    assert Path(first.storage_path).parent == storage_dir
 
 
 def test_live_fetch_refuses_placeholder_contact_before_network_access(tmp_path: Path) -> None:

@@ -260,6 +260,61 @@ def _write_content_once(path: Path, content: bytes) -> None:
             raise FetchError(f"Content-addressed path contains unexpected bytes: {path}") from None
 
 
+def _persist_raw_doc(
+    *,
+    content: bytes,
+    source_id: UUID,
+    url: str,
+    fetched_at: datetime,
+    http_status: int,
+    session: Session,
+    storage_dir: Path,
+) -> RawDoc:
+    """Persist content-addressed bytes and their immutable provenance once."""
+
+    content_hash = hashlib.sha256(content).hexdigest()
+    existing = session.exec(select(RawDoc).where(RawDoc.content_hash == content_hash)).first()
+    if existing is not None:
+        return existing
+
+    storage_path = storage_dir / content_hash
+    _write_content_once(storage_path, content)
+    raw_doc = RawDoc(
+        source_id=source_id,
+        url=url,
+        fetched_at=fetched_at,
+        content_hash=content_hash,
+        storage_path=str(storage_path),
+        http_status=http_status,
+    )
+    session.add(raw_doc)
+    session.commit()
+    session.refresh(raw_doc)
+    return raw_doc
+
+
+def ingest_bytes(
+    *,
+    content: bytes,
+    source_id: UUID,
+    url: str,
+    fetched_at: datetime,
+    session: Session,
+    storage_dir: Path = DEFAULT_STORAGE_DIR,
+) -> RawDoc:
+    """Persist local bytes with the source URL and retrieval time they came from."""
+
+    return _persist_raw_doc(
+        content=content,
+        source_id=source_id,
+        url=url,
+        fetched_at=fetched_at,
+        http_status=200,
+        session=session,
+        storage_dir=storage_dir,
+    )
+
+
 def fetch(
     *,
     url: str,
@@ -313,22 +368,12 @@ def fetch(
     if not 200 <= status < 300:
         raise FetchError(f"Fetch failed for {url} with HTTP status {status}")
 
-    content_hash = hashlib.sha256(content).hexdigest()
-    existing = session.exec(select(RawDoc).where(RawDoc.content_hash == content_hash)).first()
-    if existing is not None:
-        return existing
-
-    storage_path = storage_dir / content_hash
-    _write_content_once(storage_path, content)
-    raw_doc = RawDoc(
+    return _persist_raw_doc(
+        content=content,
         source_id=source_id,
         url=url,
         fetched_at=now(),
-        content_hash=content_hash,
-        storage_path=str(storage_path),
         http_status=status,
+        session=session,
+        storage_dir=storage_dir,
     )
-    session.add(raw_doc)
-    session.commit()
-    session.refresh(raw_doc)
-    return raw_doc

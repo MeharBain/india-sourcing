@@ -595,3 +595,102 @@ web-capable agent. Codex is not involved until Day 6.
 **Decisions promoted to docs/DECISIONS.md**
 - ADR-020: connector registration is non-instantiating, and construction occurs inside the
   orchestrator's per-source failure boundary.
+
+---
+
+## 2026-09-10 — task 011 offline ingestion
+
+**Branch / commits:** task/011-offline-ingestion, this commit
+**Prompt used:** `docs/tasks/011-offline-ingestion.md`
+
+**Changed**
+- Extracted `_persist_raw_doc()` in `src/core/storage.py` so HTTP fetching and local-byte
+  ingestion share SHA-256 hashing, content-hash lookup, content-addressed storage, immutable
+  `RawDoc` construction, and database persistence.
+- Added `ingest_bytes()` for committed artifacts, carrying the authoritative origin URL and
+  caller-supplied retrieval timestamp without opening the network.
+- Added `python -m src.cli`, which loads the configured Neon URL without printing it, seeds
+  the BIRAC source and default tenant, maps the connector's configured URLs to the two committed
+  PDFs, runs only `BiracBigConnector` through the orchestrator, and reports created-row and
+  source-health counts.
+- Added `category: government_grant` to the BIRAC source registry entry because the database
+  requires `source.category`; keeping the value in `sources.yaml` avoids a second source of
+  truth in the CLI.
+
+**Tests and live run proving it**
+- Pre-change `uv run pytest` — 87 passed. Pre-change `uv run ruff check .` — all checks passed.
+- The test-first focused run failed during collection because `ingest_bytes` did not exist.
+  After implementation, `tests/test_storage.py::test_ingest_bytes_persists_local_fixture_once_with_remote_provenance`
+  passes and proves two calls over the same small local file create one row and one stored blob
+  while retaining the remote URL and supplied timestamp. The global socket blocker makes this
+  a behavioural offline test, not a proxy.
+- `uv run alembic current` reported `c4b9e2d7a106 (head)` before ingestion.
+- `uv run python -m src.cli` reported 2 `raw_doc` rows created, 102 `signal` rows created,
+  `birac_big health_status: healthy`, and `birac_big consecutive_failures: 0`.
+- Re-ingesting the already stored BIG-21 bytes twice against Neon left the source-scoped
+  `raw_doc` count at 2 after each call and returned the same row ID both times.
+- Database provenance was checked with:
+
+  ```sql
+  SELECT count(*) AS signals,
+         count(*) FILTER (WHERE r.id IS NULL) AS unresolved_raw_doc_id,
+         count(*) FILTER (WHERE r.url IS NULL OR r.fetched_at IS NULL)
+             AS null_raw_provenance,
+         count(*) FILTER (WHERE r.url NOT LIKE 'https://birac.nic.in/%')
+             AS non_birac_urls,
+         count(*) FILTER (WHERE s.company_id IS NOT NULL) AS assigned_company_ids
+  FROM signal s
+  LEFT JOIN raw_doc r ON r.id = s.raw_doc_id
+  WHERE s.source_id = (SELECT id FROM source WHERE key = 'birac_big');
+  ```
+
+  The result was `(102, 0, 0, 0, 0)`. Grouping the same join by URL returned the two configured
+  BIRAC HTTPS URLs with 51 signals each and non-null timezone-aware retrieval timestamps.
+- `SELECT signal_type, count(*), min(confidence), max(confidence) FROM signal WHERE source_id =
+  (SELECT id FROM source WHERE key = 'birac_big') GROUP BY signal_type` returned: ambiguous
+  `(4, 0.30, 0.30)`, company LLP `(4, 0.95, 0.95)`, company OPC `(1, 0.95, 0.95)`, company
+  private limited `(60, 0.95, 0.95)`, and person `(33, 0.50, 0.95)`. These totals and ranges
+  match task 010's combined cohort distributions.
+- `SELECT count(*) FROM signal WHERE source_id = (SELECT id FROM source WHERE key =
+  'birac_big') AND confidence < 0.70` returned `12`.
+
+**Criterion 9 schema findings**
+- Source seeding exposed one configuration gap: `source.category` is non-null but BIRAC had no
+  corresponding registry value. `government_grant` is now explicit in `sources.yaml`; no
+  schema change was needed. The remaining source fields came directly from the registry.
+- Tenant seeding needed an operational identity even though source ingestion is tenant-neutral.
+  The command uses the explicit default name `India sourcing`; `thesis_doc` naturally remains
+  null, while SQLModel supplies the required JSONB `weight_overrides` as `{}`. Neon stored all
+  three values with their declared types.
+- No column proved unusable as typed. The one semantic compromise is `raw_doc.http_status`:
+  local ingestion performs no HTTP request, but the non-null integer records `200` for these
+  committed fixtures, consistently with their existing connector contract rows and their
+  origin as successfully downloaded artifacts. A future non-HTTP raw-document source would
+  require a separately specified schema decision; this task does not introduce one.
+- The existing `raw_doc_immutable` and `signal_append_only` triggers were present for both
+  `UPDATE` and `DELETE` in `information_schema.triggers`. They did not interfere because this
+  path only inserts raw documents and signals; all 104 inserts committed successfully. No
+  update/delete workaround was attempted.
+- These findings concern explicit seed metadata and offline HTTP semantics, not an inability
+  of the current schema to represent the requested BIRAC run, so no structural blocker or ADR
+  was raised.
+
+**Behavioural/proxy disclosure**
+- The local fixture test directly executes hashing, deduplication, storage and `RawDoc`
+  construction with sockets blocked. It does not exercise PostgreSQL JSONB, foreign keys,
+  server defaults, or triggers. The Neon run proved those production-schema behaviours, the
+  end-to-end orchestrator write, and reachable database provenance.
+
+**Unfinished**
+- Live discovery, entity resolution, scoring, and the review UI remain intentionally out of
+  scope. The CLI is safe for the requested first run; re-running the whole command would append
+  another signal version because signal-run idempotency was not part of this task.
+
+**Assumptions I had to make because the spec didn't say**
+- The single initial tenant is named `India sourcing` and starts without a thesis document or
+  weight overrides.
+- `government_grant` is the source-level category for BIRAC BIG.
+- HTTP 200 is the appropriate stored status for the already downloaded fixture bytes.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None. No data-model invariant changed.

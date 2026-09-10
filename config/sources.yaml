@@ -10,6 +10,7 @@ sources:
   - key: birac_big
     name: BIRAC Biotechnology Ignition Grant awardees
     tier: 1
+    category: government_grant
     status: green
     verified: true
     base_url: https://birac.nic.in/
