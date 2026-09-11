@@ -1,6 +1,6 @@
 # 020 — Consolidate current-state ownership
 
-**Status:** proposed
+**Status:** blocked
 **Branch:** task/020-current-state-owner
 **Depends on:** 018 merged
 **Documentation impact:** semantic
@@ -179,4 +179,27 @@ PROGRESS.md
 
 ## Blockers and questions
 
-*(none at creation)*
+### 2026-09-11 — reviewer found a Task 019 ownership contradiction
+
+The implementation and its canonical verification pass, but independent review found that
+`docs/tasks/019-business-advisor-agent.md:84,86` still assigns current-state consolidation to
+Task 018. Task 019's later blocker correctly says those statements are false because Task 020 owns
+the work, but leaving both statements in the same live task artifact conflicts with criterion 6's
+requirement that no other file claim current-state ownership.
+
+The approved Task 020 specification also requires its diff not to change Task 019 (criterion 9 and
+the expected-file list), so the implementer cannot fix those lines without an explicit amendment.
+
+Two coherent options remain:
+
+1. **Recommended — reconcile Task 019 here.** Add `current state` and `current-state` to Task 020's
+   sweep terms; authorize only the corresponding Task 019 wording and dependency corrections;
+   replace the stale Task-018 ownership statements with Task 020; add `020 merged` to Task 019's
+   dependency; and amend criterion 9 plus the expected-file list to permit this bounded fourth
+   file. This also resolves Task 019's recorded current-state blocker before its next audit.
+2. **Treat superseded task prose as historical.** Amend criterion 6 to exclude pre-approval sweep
+   statements that a later blocker explicitly supersedes, retain Task 019 unchanged, and record
+   why those lines are not considered a competing live ownership claim.
+
+Decision needed: choose option 1 or 2. Task 020 remains unmerged and Task 019 implementation must
+not start until the decision is recorded, implemented, and reviewed.
