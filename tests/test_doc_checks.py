@@ -30,9 +30,17 @@ def _task(*, impact: str = "semantic", body: str = "") -> str:
         semantic_scope = """
 ### Pre-approval impact sweep
 
-Included with dispositions: `PRD.md`, `docs/DECISIONS.md`, the current-state block of
-`PROGRESS.md`, `docs/CONTEXT.md`, and `docs/tasks/018-example.md`.
-Additional dependents: none. Every pre-Gate-1 hit is recorded with a disposition.
+- `PRD.md` — included.
+- `docs/DECISIONS.md` — included.
+- The current-state block of `PROGRESS.md` — included.
+- `docs/CONTEXT.md` — included.
+- This task file, `docs/tasks/018-example.md` — included.
+
+Additional dependents: `docs/extra.md`.
+
+Pre-Gate-1 hit dispositions:
+
+- `docs/extra.md` — retained.
 """
     return f"""# 018 — Example
 
@@ -152,6 +160,41 @@ def test_missing_semantic_sweep_metadata_fails(valid_tree: Path) -> None:
     assert result.returncode == 1
     assert "docs/tasks/018-example.md" in result.stderr
     assert "semantic task is missing Sweep terms metadata" in result.stderr
+
+
+def test_incomplete_core_disposition_fails(valid_tree: Path) -> None:
+    content = _task().replace("`PRD.md` — included.", "`PRD.md` — mentioned.")
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
+    assert result.returncode == 1
+    assert "docs/tasks/018-example.md" in result.stderr
+    assert "pre-approval sweep lacks an included/excluded disposition for PRD.md" in result.stderr
+
+
+def test_missing_additional_dependent_disposition_fails(valid_tree: Path) -> None:
+    content = _task().replace("Additional dependents: `docs/extra.md`.\n\n", "")
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
+    assert result.returncode == 1
+    assert "docs/tasks/018-example.md" in result.stderr
+    assert "pre-approval sweep does not list additional dependents" in result.stderr
+
+
+def test_missing_hit_dispositions_fails(valid_tree: Path) -> None:
+    content = _task().replace(
+        "Pre-Gate-1 hit dispositions:\n\n- `docs/extra.md` — retained.\n", ""
+    )
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
+    assert result.returncode == 1
+    assert "docs/tasks/018-example.md" in result.stderr
+    assert "pre-approval sweep does not record hit dispositions" in result.stderr
 
 
 def test_nonexistent_internal_path_fails(valid_tree: Path) -> None:

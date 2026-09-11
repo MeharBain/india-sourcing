@@ -1056,15 +1056,16 @@ Newest entries at the bottom.
 - Restricted researcher dispatch to external web research, source audits, back-tests, dossier
   assembly, and fetching external artifacts; ordinary repository documentation stays in the
   normal spec/implement/review cycle.
-- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and eight
+- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and eleven
   behavioral CLI tests using temporary fixture repositories. The checker explicitly does not
   infer semantic classification, judge prose consistency, or ban unconfigured historical terms.
 - Deleted the resolved `Interpretations` mismatch from `docs/CONTEXT.md`.
 
 **Acceptance criteria**
 1. **Met:** all four live policy owners state universal, separate merge/push authorization gates.
-2. **Met:** task branches are universal; only a task-file-only local blocker commit may use
-   `main`, and both agent contracts require asking before its push and reporting pending visibility.
+2. **Met:** task branches are universal; AGENTS states the rule absolutely outside its conditional
+   prohibition list. Only a task-file-only local blocker commit may use `main`, and both agent
+   contracts require asking before its push and reporting pending visibility.
 3. **Met:** `uv run python scripts/check_docs.py` proves all three marked mirrors equal the README
    owner block.
 4. **Met:** ordinary docs get one reviewer; canonical high-risk diffs get two; disagreement blocks;
@@ -1083,11 +1084,13 @@ Newest entries at the bottom.
     name all five external researcher uses; current research state now comes from `PROGRESS.md`.
 11. **Met:** the configured contradiction search exited 1 with no matches; the orchestrator has no
     live automatic-merge outcome.
-12. **Met:** the checker imports only Python standard-library modules, uses bounded JSON config, and
-    exits 0 with exactly `Documentation checks passed.`
-13. **Met:** `tests/test_doc_checks.py` behaviorally covers valid fixtures; missing and out-of-order
-    sections; missing semantic metadata; missing paths/fragments; mirror drift; and path-scoped
-    retired phrases. Every failure assertion checks path and reason.
+12. **Met:** the checker imports only Python standard-library modules, uses bounded JSON config,
+    inspects the intended pre-approval sweep subsection, and exits 0 with exactly
+    `Documentation checks passed.`
+13. **Met:** eleven tests behaviorally cover valid fixtures; missing and out-of-order sections;
+    missing semantic metadata; incomplete core, additional-dependent, and hit dispositions;
+    missing paths/fragments; mirror drift; and path-scoped retired phrases. Every failure assertion
+    checks path and reason.
 14. **Met:** checker and convention document their semantic limits; `pyproject.toml` and `uv.lock`
     are unchanged.
 15. **Met:** all three post-edit searches and every remaining hit disposition are recorded in the
@@ -1099,17 +1102,19 @@ Newest entries at the bottom.
 
 **Verification**
 - `uv run python scripts/check_docs.py` â€” exit 0; `Documentation checks passed.`
-- `uv run pytest` â€” exit 0; 125 tests collected, `125 passed in 18.02s`.
+- `uv run pytest` â€” exit 0; 128 tests collected, `128 passed in 42.32s`.
 - `uv run ruff check .` â€” exit 0; `All checks passed!`
 - Pytest and Ruff ran after the final substantive change and cover that diff. The later task/status
   and PROGRESS edits record only evidence, so they do not invalidate the run. No rerun trigger
   occurred.
-- Focused test-first evidence: before the checker existed, all eight new tests failed because the
-  script path was absent; after implementation, `8 passed in 3.99s`.
+- Focused test-first evidence: before the checker existed, all eight original tests failed because
+  the script path was absent; after implementation, `8 passed in 3.99s`. In rework cycle 1, the
+  three new disposition tests failed against the original checker before implementation; the full
+  final suite includes all eleven checker tests. The final focused run was `11 passed in 12.69s`.
 - JSON and every `.codex/agents/*.toml` file parsed with Python's standard library.
 
 **Behavioural/proxy disclosure**
-- The eight checker tests invoke the real CLI against temporary repository trees and assert its
+- The eleven checker tests invoke the real CLI against temporary repository trees and assert its
   observable output and exit status. They are behavioral tests, not proxies.
 
 **Files outside the expected list**

@@ -323,6 +323,9 @@ All task work uses a task branch. The sole direct-local-`main` exception is the 
 blocker commit required by `docs/tasks/README.md`; it still cannot be pushed without explicit
 authorization in the current session.
 
+Never commit task work directly to `main`. This prohibition is absolute except for that local,
+task-file-only blocker record; being asked to perform task work does not create another exception.
+
 **You must never, without being asked in that specific session:**
 
 - `push --force` or `push --force-with-lease` to any branch
@@ -332,8 +335,6 @@ authorization in the current session.
 - `git add .env`, any file containing a key or token, or anything matched by `.gitignore`.
   If `git status` shows a credential-bearing file as untracked, add it to `.gitignore` and say
   so rather than committing it.
-- Commit task work directly to `main`, except for the task-file-only local blocker record above.
-
 **Before every commit:** run `git status` and `git diff --staged`, and state in your reply
 what you are about to commit and why. If the staged set includes anything you did not
 intentionally change, stop and report it instead of committing.

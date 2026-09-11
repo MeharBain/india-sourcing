@@ -6,7 +6,8 @@
 **Documentation impact:** semantic
 **Sweep terms:** `merge`; `push`; `autonomous`; `documentation-only`; `researcher`;
 `Interpretations`; `amendment`; `sweep`; `verification`; `write isolation`; `write root`;
-`section 3`; `section 4`; `section 5`; `section 7`
+`section 3`; `section 4`; `section 5`; `section 7`; `task branch`; `direct to main`;
+`pre-approval`; `disposition`; `additional dependents`; `hit dispositions`; `six .codex agents`
 
 ---
 
@@ -80,7 +81,7 @@ Core-file dispositions:
 - `docs/tasks/018-documentation-fast-lane.md` — included; its terminology, criteria, file list,
   bootstrap authority, and dependency split were checked together.
 
-Additional dependents are the seven `.codex/agents/*.toml` role contracts and
+Additional dependents are the six `.codex/agents/*.toml` role contracts and
 `docs/AGENT_ARCHITECTURE.md`; the hit dispositions below enumerate their affected lines. No other
 dependent requires an edit.
 
@@ -177,7 +178,7 @@ The implementer records a post-edit pass over the same commands and dispositions
 The implementer reran all three pre-approval commands after the substantive edits. The first
 command returned these current-policy or safety/history hits:
 
-- `AGENTS.md:263,280,289,292,317-319,323,328,330-331` â€” retain. These lines require authorized
+- `AGENTS.md:263,280,289,292,317-319,323,331,333-334` â€” retain. These lines require authorized
   blocker pushes, describe the dispatch stage, select one documentation reviewer, impose universal
   merge/push gates, and preserve force-push/history/branch protections.
 - `docs/tasks/README.md:72,101-102,174,185,189,205,207,210,224-225,236-237` â€” retain. These lines
@@ -205,7 +206,7 @@ The second command returned these current, historical, or explicitly deferred hi
 - `.codex/agents/orchestrator.toml:21,43,49-50,91,113,240` â€” retain. These require current CONTEXT
   intake, visible interpretations, the researcher boundary, and final reporting.
 - `.codex/agents/implementer.toml:11,13`, `.codex/agents/reviewer.toml:15`,
-  `.codex/agents/spec-writer.toml:12,49,51`, and `.codex/agents/spec-auditor.toml:12,42` â€” retain.
+  `.codex/agents/spec-writer.toml:12,50,52`, and `.codex/agents/spec-auditor.toml:12,42` â€” retain.
   Task 020 preserves CONTEXT sections 3-5; the spec-writer stale snapshot is gone and the required
   Interpretations rule remains.
 - `.codex/agents/researcher.toml:1,24` â€” retain. These are the role name and durable CONTEXT
@@ -238,13 +239,57 @@ reviewer selection, verification reuse, expected-file write isolation, or the re
 
 - `uv run python scripts/check_docs.py` exited 0 with the single line
   `Documentation checks passed.`
-- `uv run pytest` exited 0: `125 passed in 18.02s`.
+- `uv run pytest` exited 0: `128 passed in 42.32s`.
 - `uv run ruff check .` exited 0: `All checks passed!`
 - Both canonical commands ran after the final substantive change. Subsequent edits only record
   this evidence and completion status. Task 018 adds an executable checker and tests, so it is
   ineligible for the future documentation-only one-run shortcut.
 - No path outside **Files expected to change** changed. `pyproject.toml` and `uv.lock` are
   unchanged. No dependency was added and no proxy test was introduced.
+
+### Review amendment and rework cycle 1 (2026-09-11)
+
+The human resolved the first dual-review disagreement in favor of the stricter rule: all task
+work, including documentation, must use a task branch; the sole direct-to-`main` exception is the
+local task-file-only blocker commit. Criterion 2 and the AGENTS Git policy are affected. The
+absolute rule now sits outside the grammatically conditional â€œwithout being askedâ€ list while
+merge and push remain separately authorized.
+
+The agreed checker finding affects criteria 12-14: semantic validation must inspect the intended
+`Scope` â†’ `Pre-approval impact sweep` structure and behaviorally reject incomplete core-file
+dispositions, missing additional-dependent evidence, and missing hit-disposition evidence. The
+checker remains mechanical: it validates bounded placement and disposition vocabulary without
+claiming to understand the prose. Three focused tests were added without loosening the original
+eight.
+
+Criterion 15 and the post-edit record are also affected: the dependent inventory is six existing
+agent TOMLs, not seven, and all exact search line references must describe the final diff. The
+added consolidated sweep terms are `task branch`, `direct to main`, `pre-approval`, `disposition`,
+`additional dependents`, `hit dispositions`, and `six .codex agents`.
+
+The consolidated rework resweep returned:
+
+- `AGENTS.md:322`, `docs/tasks/README.md:72,94,207`, and
+  `.codex/agents/implementer.toml:57` â€” retain as the absolute task-branch rule, branch-visibility
+  explanation, and implementer stop instruction. No `direct to main` wording remains; the sole
+  exception is explicitly local and task-file-only.
+- `scripts/check_docs.py:90,92,103,113-114,160,162,175,184,188,190` â€” retain as the bounded
+  extraction and actionable failure reasons for additional dependents, hit dispositions, and
+  core/task included-or-excluded evidence inside the pre-approval subsection.
+- `tests/test_doc_checks.py:31,39,41,173,177,184,189,197` â€” retain as the valid fixture and three
+  new negative behavioral assertions. Each negative assertion names the offending task path and
+  the specific missing disposition evidence.
+- `.codex/agents/orchestrator.toml:75` and `.codex/agents/spec-writer.toml:46` â€” retain as current
+  impact-audit and additional-dependent duties.
+- `PROGRESS.md:1066,1088,1091` â€” retain as criterion-2 and strengthened-checker evidence; the
+  completion entry is append-only.
+- `docs/tasks/018-documentation-fast-lane.md:9-10,63,84-85,178,253,259,267-268,274,277-278,302,328-329,406,456`
+  â€” retain. These hits are the expanded metadata, original and post-edit sweep records, durable
+  review amendment and its self-referential evidence record, approved policy text, and acceptance
+  criteria. The corrected line 84 says six existing TOMLs. No hit describes an unapproved
+  merge/push or a seventh TOML; the report's own occurrences do not require recursive resweeps.
+
+No hit requires a product decision or another wording substitution.
 
 ### 1. Universal Git authority
 
