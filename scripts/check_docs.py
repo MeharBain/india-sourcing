@@ -67,7 +67,7 @@ def _check_task(path: Path, root: Path, errors: list[str]) -> None:
     relative = _relative(path, root)
 
     for metadata in REQUIRED_METADATA:
-        if _metadata(content, metadata) is None:
+        if not _metadata(content, metadata):
             errors.append(f"{relative}: missing required metadata '{metadata}'")
 
     headings = re.findall(r"^##\s+(.+?)\s*$", content, re.MULTILINE)
@@ -83,7 +83,7 @@ def _check_task(path: Path, root: Path, errors: list[str]) -> None:
             errors.append(f"{relative}: 'Interpretations' must appear immediately after 'Intent'")
 
     impact = _metadata(content, "Documentation impact")
-    if impact is None:
+    if not impact:
         return
     if impact not in VALID_IMPACTS:
         errors.append(
@@ -93,7 +93,7 @@ def _check_task(path: Path, root: Path, errors: list[str]) -> None:
     if impact == "none":
         return
     if impact == "structural":
-        if _metadata(content, "Affected paths") is None:
+        if not _metadata(content, "Affected paths"):
             errors.append(f"{relative}: structural task is missing Affected paths metadata")
         return
 

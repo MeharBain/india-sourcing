@@ -152,6 +152,38 @@ def test_missing_or_out_of_order_sections_fail(
     assert reason in result.stderr
 
 
+@pytest.mark.parametrize("metadata", ["Status", "Branch", "Depends on"])
+def test_blank_required_metadata_fails(valid_tree: Path, metadata: str) -> None:
+    content = _task().replace(
+        f"**{metadata}:** " + {
+            "Status": "proposed",
+            "Branch": "task/018-example",
+            "Depends on": "none",
+        }[metadata],
+        f"**{metadata}:**   ",
+    )
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
+    assert result.returncode == 1
+    assert "docs/tasks/018-example.md" in result.stderr
+    assert f"missing required metadata '{metadata}'" in result.stderr
+
+
+def test_blank_structural_affected_paths_fails(valid_tree: Path) -> None:
+    content = _task(impact="structural").replace(
+        "**Affected paths:** `docs/example.md`", "**Affected paths:**   "
+    )
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
+    assert result.returncode == 1
+    assert "docs/tasks/018-example.md" in result.stderr
+    assert "structural task is missing Affected paths metadata" in result.stderr
+
+
 @pytest.mark.parametrize(
     "content",
     [

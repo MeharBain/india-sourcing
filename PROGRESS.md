@@ -1056,7 +1056,7 @@ Newest entries at the bottom.
 - Restricted researcher dispatch to external web research, source audits, back-tests, dossier
   assembly, and fetching external artifacts; ordinary repository documentation stays in the
   normal spec/implement/review cycle.
-- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and twelve
+- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and sixteen
   behavioral CLI cases using temporary fixture repositories. The checker explicitly does not
   infer semantic classification, judge prose consistency or sweep-disposition quality or
   completeness, or ban unconfigured historical terms; the spec auditor and reviewer own those
@@ -1088,12 +1088,14 @@ Newest entries at the bottom.
 11. **Met:** the configured contradiction search exited 1 with no matches; the orchestrator has no
     live automatic-merge outcome.
 12. **Met:** the checker imports only Python standard-library modules, uses bounded JSON config,
-    mechanically requires non-empty semantic sweep terms and the pre-approval subsection inside
-    Scope, and exits 0 with exactly `Documentation checks passed.`
-13. **Met:** twelve behavioral CLI cases cover valid fixtures; missing and out-of-order sections;
-    missing and empty semantic sweep metadata; a missing pre-approval subsection; placeholder
-    disposition prose passing without semantic evaluation; missing paths/fragments; mirror drift;
-    and path-scoped retired phrases. Every failure assertion checks path and reason.
+    rejects blank required task metadata and blank structural `Affected paths`, mechanically
+    requires non-empty semantic sweep terms and the pre-approval subsection inside Scope, and
+    exits 0 with exactly `Documentation checks passed.`
+13. **Met:** sixteen behavioral CLI cases cover valid fixtures; blank `Status`, `Branch`,
+    `Depends on`, and structural `Affected paths`; missing and out-of-order sections; missing and
+    empty semantic sweep metadata; a missing pre-approval subsection; placeholder disposition
+    prose passing without semantic evaluation; missing paths/fragments; mirror drift; and
+    path-scoped retired phrases. Every failure assertion checks path and reason.
 14. **Met:** checker and convention document that disposition quality/completeness is outside
     automation and assign it to the spec auditor and reviewer; `pyproject.toml` and `uv.lock` are
     unchanged.
@@ -1106,7 +1108,7 @@ Newest entries at the bottom.
 
 **Verification**
 - `uv run python scripts/check_docs.py` â€” exit 0; `Documentation checks passed.`
-- `uv run pytest` â€” exit 0; 129 tests collected, `129 passed in 12.83s`.
+- `uv run pytest` â€” exit 0; 133 tests collected, `133 passed in 24.51s`.
 - `uv run ruff check .` â€” exit 0; `All checks passed!`
 - Pytest and Ruff ran after the final substantive change and cover that diff. The later task/status
   and PROGRESS edits record only evidence, so they do not invalidate the run. No rerun trigger
@@ -1115,12 +1117,13 @@ Newest entries at the bottom.
   the script path was absent; after implementation, `8 passed in 3.99s`. In rework cycle 1, the
   three then-required heuristic tests failed before implementation. In rework cycle 2, the two
   boundary-pass cases failed against those heuristics (`2 failed, 9 passed in 6.98s`) before the
-  human-approved mechanical-only boundary was implemented; the final focused run was
-  `12 passed in 7.52s`.
+  human-approved mechanical-only boundary was implemented. In corrective cycle 3, blank required
+  and structural metadata produced `4 failed, 12 passed in 9.97s` before validation; the final
+  focused run was `16 passed in 9.45s`.
 - JSON and every `.codex/agents/*.toml` file parsed with Python's standard library.
 
 **Behavioural/proxy disclosure**
-- The twelve checker cases invoke the real CLI against temporary repository trees and assert its
+- The sixteen checker cases invoke the real CLI against temporary repository trees and assert its
   observable output and exit status. They are behavioral tests, not proxies.
 
 **Files outside the expected list**

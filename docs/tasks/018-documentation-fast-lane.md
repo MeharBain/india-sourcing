@@ -240,10 +240,12 @@ reviewer selection, verification reuse, expected-file write isolation, or the re
 
 - `uv run python scripts/check_docs.py` exited 0 with the single line
   `Documentation checks passed.`
-- `uv run pytest` exited 0: `129 passed in 12.83s`.
+- `uv run pytest` exited 0: `133 passed in 24.51s`.
 - `uv run ruff check .` exited 0: `All checks passed!`
-- The final focused checker run exited 0: `12 passed in 7.52s`. Its cycle-2 test-first run
-  exited 1 with `2 failed, 9 passed in 6.98s` before the semantic heuristics were removed.
+- The final focused checker run exited 0: `16 passed in 9.45s`. Its cycle-3 test-first run exited
+  1 with `4 failed, 12 passed in 9.97s` before blank metadata validation was implemented. The
+  earlier cycle-2 test-first run exited 1 with `2 failed, 9 passed in 6.98s` before the semantic
+  heuristics were removed.
 - Both canonical commands ran after the final substantive change. Subsequent edits only record
   this evidence and completion status. Task 018 adds an executable checker and tests, so it is
   ineligible for the future documentation-only one-run shortcut.
@@ -294,32 +296,60 @@ passed behavior remain unchanged.
 After the final substantive edits, the implementer reran the three exact pre-approval commands.
 Their current repository-relative references and dispositions are the complete lists in
 **Post-edit impact sweep (2026-09-11)** above; the updated README references include its explicit
-semantic-checker limitation, and no policy hit was omitted. The implementer also ran:
+semantic-checker limitation, and no policy hit was omitted. For the rework terms, the implementer
+ran this exact per-term command after the final policy, checker, test, and PROGRESS edits. The task
+artifact is excluded to prevent the report from recursively creating immediately stale
+self-citations; its original core-file disposition remains included.
 
-```text
-rg -n -i "task branch|direct to main|pre-approval|disposition|additional dependent|hit disposition|six \.codex agents|semantic judgment|placeholder disposition" AGENTS.md docs/tasks/README.md docs/AGENT_ARCHITECTURE.md .codex/agents scripts/check_docs.py tests/test_doc_checks.py PROGRESS.md docs/tasks/018-documentation-fast-lane.md
+```powershell
+$task018Terms = @("task branch","direct to main","pre-approval","disposition","additional dependent","hit disposition","six \.codex agents","semantic judgment","placeholder disposition")
+foreach ($task018Term in $task018Terms) { rg -n -i -- $task018Term AGENTS.md docs/tasks/README.md docs/AGENT_ARCHITECTURE.md .codex/agents scripts/check_docs.py tests/test_doc_checks.py PROGRESS.md }
 ```
 
-Every targeted hit is disposed as follows without relying on self-referential task line numbers:
+The complete per-term results and dispositions are:
 
-- The task's **Review amendment and rework cycle 2**, Scope item 6, checker limitation, and
-  criteria 7, 12, 13, and 14 state the approved mechanical-only boundary and human semantic owner.
-- `docs/tasks/README.md` says a passing checker is not evidence that sweep dispositions are
-  meaningful or complete. `.codex/agents/spec-writer.toml` requires preparing core-file,
-  additional-dependent, and hit dispositions; `.codex/agents/spec-auditor.toml` item 9 audits
-  them; `.codex/agents/reviewer.toml` under **FOR EACH ACCEPTANCE CRITERION** assigns the same
-  judgment to review. The orchestrator's impact sweep and implementer's task-branch stop rules
-  retain their current workflow meanings.
-- `scripts/check_docs.py` documents the limitation and `_check_task` checks only non-empty
-  `Sweep terms` plus the `Pre-approval impact sweep` subsection for semantic tasks.
-- `tests/test_doc_checks.py` names the boundary behavior in
-  `test_placeholder_disposition_prose_is_left_to_semantic_review`,
-  `test_hit_and_dependent_categories_are_not_semantically_required`,
-  `test_missing_or_empty_semantic_sweep_terms_fail`, and
-  `test_missing_semantic_preapproval_section_fails`.
-- `PROGRESS.md` records the same criterion and behavioral-test evidence. No other targeted hit
-  describes live behavior, and the six existing `.codex/agents/*.toml` files are all accounted
-  for across the post-edit sweep.
+- `task branch` — `AGENTS.md:322`, `docs/tasks/README.md:72,94,209`,
+  `.codex/agents/implementer.toml:57`, and `PROGRESS.md:1068`. Retain every hit: together they state
+  the absolute branch rule, explain branch visibility, stop the implementer on its task branch,
+  and record criterion evidence.
+- `direct to main` — no matches. Retain the approved “direct-local main” wording where the
+  exception is defined; no unqualified direct-to-main permission exists.
+- `pre-approval` — `.codex/agents/reviewer.toml:32`, `scripts/check_docs.py:103,105`,
+  `tests/test_doc_checks.py:31,228,235`, and `PROGRESS.md:1081,1092,1096`. Retain every hit: these
+  are the reviewer duty, mechanical section lookup/error, behavioral fixture/assertions, and
+  criterion evidence.
+- `disposition` — `docs/tasks/README.md:156,159,163,167,169`,
+  `.codex/agents/orchestrator.toml:75`, `.codex/agents/spec-writer.toml:44,47-48`,
+  `.codex/agents/spec-auditor.toml:48,51`, `.codex/agents/reviewer.toml:32`,
+  `scripts/check_docs.py:4`, `tests/test_doc_checks.py:41,206,214,216,241`, and
+  `PROGRESS.md:1061,1096,1099,1102`. Retain every hit: they distinguish the human-owned semantic
+  duty from the checker's documented limitation and exercise/record that boundary.
+- `additional dependent` — `docs/tasks/README.md:158`, `.codex/agents/spec-writer.toml:46`, and
+  `tests/test_doc_checks.py:39,213,240`. Retain every hit: the convention and writer require the
+  inventory, while the fixtures prove the checker does not interpret its prose.
+- `hit disposition` — `.codex/agents/orchestrator.toml:75`, `.codex/agents/reviewer.toml:32`,
+  `tests/test_doc_checks.py:41,214,241`, and `PROGRESS.md:1102`. Retain every hit as the
+  orchestration/review responsibility, boundary fixtures, and sweep evidence.
+- `six \.codex agents` — no matches. The inventory uses the precise repository form “six existing
+  `.codex/agents/*.toml` files”; the earlier incorrect count of seven remains absent.
+- `semantic judgment` — `docs/tasks/README.md:169` and `PROGRESS.md:1063`. Retain both: the first
+  assigns ownership to humans and the second records the implemented boundary.
+- `placeholder disposition` — `tests/test_doc_checks.py:216` and `PROGRESS.md:1096`. Retain both:
+  the first is the explicit boundary fixture and the second is criterion evidence.
+
+No result requires a wording substitution or product decision. All matches from every declared
+term are enumerated above; no unnamed “other hits” group is used.
+
+### Review amendment and corrective cycle 3 (2026-09-11)
+
+The human authorized two final corrections without changing policy. First, required task metadata
+(`Status`, `Branch`, `Depends on`, and `Documentation impact`) and structural `Affected paths`
+must contain non-whitespace values; their presence alone is not mechanically valid. Second, the
+cycle-2 resweep must follow the existing convention literally by reporting each declared term,
+every matching file and line from the declared command, and the disposition of every enumerated
+hit. The final resweep above excludes this task artifact from its command to avoid recursive,
+immediately stale self-citations; the task remains included as the durable specification and audit
+record under the original core-file disposition.
 
 ### 1. Universal Git authority
 
@@ -405,8 +435,10 @@ assembly, or fetching external artifacts.
 Add `scripts/check_docs.py` using only the standard library and `docs/doc-checks.json` as bounded
 configuration. With no arguments it must:
 
-- validate required task metadata and section presence/order for Task 018 onward, including
+- validate non-empty required task metadata and section presence/order for Task 018 onward,
+  including
   `## Interpretations` immediately after `## Intent`;
+- require non-empty `**Affected paths:**` metadata for structural tasks;
 - for semantic tasks, require non-empty `**Sweep terms:**` metadata and the
   `### Pre-approval impact sweep` subsection inside `## Scope`, without evaluating the quality or
   completeness of its core-file, additional-dependent, or hit-disposition prose;
@@ -479,12 +511,15 @@ valid. Add no dependency.
     5 or final-report locations, including former lines 170, 227–228, and 235. Across live policy
     files, `rg -n -i "merge(s|d)? autonomously|push(es|ed|ing)? without (asking|approval|authorization|waiting)|pushing is not optional|everything else merges" AGENTS.md docs/tasks/README.md docs/AGENT_ARCHITECTURE.md .codex/agents`
     returns no contradiction.
-12. `scripts/check_docs.py` imports only standard-library modules.
+12. `scripts/check_docs.py` imports only standard-library modules. It rejects missing, blank, or
+    whitespace-only required metadata and rejects missing, blank, or whitespace-only structural
+    `Affected paths`.
     `uv run python scripts/check_docs.py` exits 0 with one concise success line, using
     `docs/doc-checks.json` to bound the minimum task number, Markdown paths, mirror paths/markers,
     and retired phrase/path pairs. Its semantic-task checks are limited to non-empty sweep terms
     and placement of the pre-approval sweep subsection inside Scope.
-13. `tests/test_doc_checks.py` behaviorally proves: valid fixtures pass; missing/out-of-order
+13. `tests/test_doc_checks.py` behaviorally proves: valid fixtures pass; blank or whitespace-only
+    `Status`, `Branch`, `Depends on`, and structural `Affected paths` fail; missing/out-of-order
     sections fail; missing or empty semantic sweep metadata and a missing pre-approval subsection
     fail; placeholder disposition prose passes without semantic evaluation; nonexistent internal
     paths and explicit heading fragments fail; a changed high-risk mirror fails; and a retired
