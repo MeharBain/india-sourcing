@@ -1164,6 +1164,8 @@ Newest entries at the bottom.
   The approved amendment resweep is also recorded hit by hit.
 - Added `020 merged` to Task 019's dependency metadata and corrected exactly two stale ownership
   statements. Task 019 remains blocked and its implementation has not begun.
+- Corrected criterion 9's circular merge evidence without changing sequencing: pre-merge evidence
+  now proves Task 019 has not begun and must remain blocked until Task 020 lands.
 
 **Acceptance criteria**
 1. **Met:** CONTEXT line 14 retains the authoritative `PROGRESS.md` row; section 2 is now a pointer
@@ -1183,20 +1185,18 @@ Newest entries at the bottom.
 7. **Met:** final documentation-only verification evidence is recorded below.
 8. **Met:** this entry records criterion evidence, file accounting, and unfinished work; the task
    status is complete.
-9. **Met:** the task depends on `018 merged`; Task 020 implementation completed before Task 019
-   implementation began. The Task 019 diff contains only the added `020 merged` dependency and
-   the two authorized ownership substitutions. Merge sequencing must preserve that order.
+9. **Met:** the task depends on `018 merged`; Task 019 implementation has not begun and must remain
+   blocked until Task 020 lands. The Task 019 diff contains only the added `020 merged` dependency
+   and the two authorized ownership substitutions; the post-merge sequencing gate is unchanged.
 
 **Verification**
-- `uv run python scripts/check_docs.py` — exit 0; `Documentation checks passed.` The first
-  sandboxed attempt exited 1 before the checker ran because the shared uv cache was inaccessible;
-  rerunning the same command with cache access succeeded without a content change.
-- `uv run pytest` — exit 0; 133 tests collected, `133 passed in 21.22s`.
+- `uv run python scripts/check_docs.py` — exit 0; `Documentation checks passed.`
+- `uv run pytest` — exit 0; 133 tests collected, `133 passed in 24.48s`.
 - `uv run ruff check .` — exit 0; `All checks passed!`
-- All three successful commands ran after the final substantive edit and cover the final
-  substantive diff. The approved amendment and review finding changed relevant content after the
-  earlier evidence, so the rerun trigger occurred and this evidence replaces the original run.
-  This status/evidence-only update does not invalidate it.
+- All three commands ran after the final substantive edit and cover the final substantive diff.
+  Criterion 9 and its durable amendment changed relevant prose after the preceding verification,
+  so the rerun trigger occurred and this evidence replaces the prior run. This status/evidence-only
+  update does not invalidate it.
 
 **Files outside the expected list**
 - None.

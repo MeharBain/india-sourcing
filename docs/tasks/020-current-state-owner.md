@@ -205,10 +205,11 @@ for the correction. Do not resolve Task 019's other blockers or begin its implem
 8. `PROGRESS.md` contains a Task 020 session entry with criterion-level evidence, undeclared-file
    accounting, and unfinished work. This task is marked `complete` only after every criterion
    passes.
-9. The header says `**Depends on:** 018 merged`, the completion report confirms Task 020 landed
-   before Task 019 implementation began, and Task 020’s diff changes
-   `docs/tasks/019-business-advisor-agent.md` only to add the `020 merged` dependency and correct
-   the two stale current-state ownership statements authorized above.
+9. The header says `**Depends on:** 018 merged`; the pre-merge completion report confirms Task 019
+   implementation has not begun and records that Task 019 must remain blocked until Task 020
+   lands; and Task 020’s diff changes `docs/tasks/019-business-advisor-agent.md` only to add the
+   `020 merged` dependency and correct the two stale current-state ownership statements authorized
+   above.
 
 ## Files expected to change
 
@@ -296,3 +297,33 @@ same disposition.
 - `AGENTS.md` and `PRD.md` returned no hits. All remaining matches are accurate policy, history,
   domain-field descriptions, pointers, or Task 020 ownership records; no competing live snapshot
   or owner remains.
+
+### 2026-09-11 — criterion 9 pre-merge evidence correction
+
+The prior criterion required the completion report to confirm that Task 020 had landed, which is
+impossible to prove during the required review before merge. This mechanically equivalent
+amendment replaces only that circular proof with pre-merge evidence: Task 019 implementation has
+not begun, Task 019 must remain blocked until Task 020 lands, and its diff contains exactly the
+three authorized corrections. The post-merge sequencing gate is unchanged: Task 020 must still
+land before Task 019 proceeds.
+
+The implementer searched the relevant task and progress artifacts with:
+
+```powershell
+rg -n -i "Task 020 landed|Task 020 lands|before Task 019 implementation|Task 019 implementation has not begun|Task 019 remains blocked|must remain blocked|cannot begin implementation until Task 020 is merged|must land before" docs/tasks/019-business-advisor-agent.md docs/tasks/020-current-state-owner.md PROGRESS.md
+```
+
+Every final hit is disposed below:
+
+- `PROGRESS.md:1166,1168,1188-1189` records the still-blocked Task 019 status, the corrected
+  pre-merge evidence, and criterion-level proof. These are the intended live status records.
+- `docs/tasks/020-current-state-owner.md:45,48` states the unchanged sequencing gate and bounded
+  Task 019 status; `:209`, `:264-265`, and `:306` are the amended criterion, approved resolution,
+  and durable rationale. `:313` is this sweep's command and is the only hit containing the retired
+  completed-state wording.
+- `docs/tasks/019-business-advisor-agent.md:127,297` sets the future Task 019 pre-edit sweep and
+  verification timing. Both remain accurate and are additionally constrained by its `020 merged`
+  dependency; neither claims that implementation has started.
+
+No live assertion claims the merge has already happened. Every replacement hit preserves the
+unchanged rule that Task 019 cannot proceed until Task 020 is on main.
