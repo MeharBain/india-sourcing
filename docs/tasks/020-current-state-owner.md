@@ -1,13 +1,13 @@
 # 020 — Consolidate current-state ownership
 
-**Status:** blocked
+**Status:** in progress
 **Branch:** task/020-current-state-owner
 **Depends on:** 018 merged
 **Documentation impact:** semantic
 **Sweep terms:** `What exists and works`; `Research state`; `current position`;
 `what has been built`; `what is next`; `what is blocked`; `docs/CONTEXT.md section`; `section 2`;
 `section 3`; `section 4`; `section 5`; `section 7`; `BIG-21`; `4 of 51`; `800`; `shortlist gate`;
-`Nothing renders`; `review surface`; `researcher`
+`Nothing renders`; `review surface`; `researcher`; `current state`; `current-state`
 
 ---
 
@@ -28,6 +28,10 @@ guide without maintaining a second snapshot that can drift.
   whole CONTEXT snapshot would preserve the duplication this task removes.
 - **Researcher use.** This is repository-local document editing, so Task 018’s researcher boundary
   applies: no researcher is needed merely because one moved fact concerns research.
+- **Task 019 reconciliation.** The approved blocker resolution treats superseded ownership prose
+  in a live task artifact as stale, not historical. Task 020 therefore makes only the bounded
+  wording and dependency corrections needed to identify Task 020 as the owner. The alternative
+  would leave contradictory live claims in the repository.
 
 ## Scope
 
@@ -35,12 +39,13 @@ guide without maintaining a second snapshot that can drift.
 
 Task 020 runs after Task 018, whose approved expected-file rule gives its implementer access to
 the paths listed here. Independently, the user’s request explicitly authorizes the Task 020
-implementer to edit these three documentation artifacts to remove current-state duplication. This
+implementer to edit these four documentation artifacts to remove current-state duplication. This
 authorization does not permit merging or pushing; both retain Task 018’s human gates.
 
 Task 020 must land before the concurrent, user-owned Task 019 proceeds to implementation. Both
-would append to `PROGRESS.md`; ordering them avoids parallel conflicts without editing, renumbering,
-or otherwise changing Task 019.
+would append to `PROGRESS.md`; ordering them avoids parallel conflicts. The only Task 019 changes
+authorized here are replacing its two stale Task-018 ownership statements with Task 020 and adding
+`020 merged` to its dependency metadata. Task 019 remains blocked and is not implemented here.
 
 ### Pre-approval impact sweep
 
@@ -121,6 +126,13 @@ Before deleting the snapshots, put these four current facts above `PROGRESS.md`�
 
 Do not delete or rewrite historical session entries.
 
+### Task 019 ownership reconciliation
+
+In `docs/tasks/019-business-advisor-agent.md`, add `020 merged` to `Depends on`, replace the two
+pre-approval sweep statements assigning current-state consolidation to Task 018 with equivalent
+Task 020 ownership wording, and leave its later blocker record intact as the durable explanation
+for the correction. Do not resolve Task 019's other blockers or begin its implementation.
+
 ## Out of scope
 
 - Workflow/Git/checker changes from Task 018.
@@ -146,8 +158,9 @@ Do not delete or rewrite historical session entries.
    section targets an existing unchanged section 3, 4, or 5; no live instruction references
    CONTEXT section 2 or 7. Report the output of
    `rg -n -i "docs/CONTEXT.md section|section [23457]" .codex/agents`.
-6. All four post-edit sweep commands from Scope are recorded in this task file with every remaining
-   hit disposed. No other file claims to own current build/next/blocker/research status.
+6. All four post-edit sweep commands from Scope and the approved blocker amendment resweep for
+   `current state|current-state` are recorded in this task file with every remaining hit disposed.
+   No other file claims to own current build/next/blocker/research status.
 7. Under Task 018’s documentation-only verification policy, one final
    `uv run pytest` and `uv run ruff check .` run passes after the last substantive edit; the Task
    020 `PROGRESS.md` entry records exact commands, exit codes, concise output/test count, final-diff
@@ -156,13 +169,15 @@ Do not delete or rewrite historical session entries.
    accounting, and unfinished work. This task is marked `complete` only after every criterion
    passes.
 9. The header says `**Depends on:** 018 merged`, the completion report confirms Task 020 landed
-   before Task 019 implementation began, and Task 020’s diff contains no change to
-   `docs/tasks/019-business-advisor-agent.md`.
+   before Task 019 implementation began, and Task 020’s diff changes
+   `docs/tasks/019-business-advisor-agent.md` only to add the `020 merged` dependency and correct
+   the two stale current-state ownership statements authorized above.
 
 ## Files expected to change
 
 ```
 docs/CONTEXT.md
+docs/tasks/019-business-advisor-agent.md
 docs/tasks/020-current-state-owner.md
 PROGRESS.md
 ```
@@ -176,6 +191,8 @@ PROGRESS.md
   counts, milestones, or research progress.
 - **Rewriting history.** Only the top/current portion and a new session entry change in
   `PROGRESS.md`; old entries remain append-only.
+- **Expanding into Task 019.** The explicit three-change boundary prevents the ownership correction
+  from resolving its other blockers or beginning implementation.
 
 ## Blockers and questions
 
@@ -203,3 +220,8 @@ Two coherent options remain:
 
 Decision needed: choose option 1 or 2. Task 020 remains unmerged and Task 019 implementation must
 not start until the decision is recorded, implemented, and reviewed.
+
+**Resolution — approved by the user on 2026-09-11:** Option 1. Task 020 owns the bounded Task 019
+wording and dependency corrections described above. The sweep terms, scope, criteria, expected-file
+list, and risks are amended accordingly. Task 019 remains blocked for its other recorded decisions
+and cannot begin implementation until Task 020 is merged.
