@@ -1,13 +1,14 @@
 # 018 — Documentation fast lane
 
-**Status:** complete
+**Status:** in progress
 **Branch:** task/018-documentation-fast-lane
 **Depends on:** none
 **Documentation impact:** semantic
 **Sweep terms:** `merge`; `push`; `autonomous`; `documentation-only`; `researcher`;
 `Interpretations`; `amendment`; `sweep`; `verification`; `write isolation`; `write root`;
 `section 3`; `section 4`; `section 5`; `section 7`; `task branch`; `direct to main`;
-`pre-approval`; `disposition`; `additional dependents`; `hit dispositions`; `six .codex agents`
+`pre-approval`; `disposition`; `additional dependents`; `hit dispositions`; `six .codex agents`;
+`semantic judgment`; `placeholder disposition`
 
 ---
 
@@ -290,6 +291,23 @@ The consolidated rework resweep returned:
   merge/push or a seventh TOML; the report's own occurrences do not require recursive resweeps.
 
 No hit requires a product decision or another wording substitution.
+
+### Review amendment and rework cycle 2 (2026-09-11)
+
+The human resolved the second dual-review disagreement by changing the checker boundary.
+Automated semantic-disposition quality or completeness checking is out of scope because deciding
+whether prose meaningfully includes, excludes, or disposes a dependency requires semantic
+judgment. The spec auditor and reviewer—not the checker—own that judgment.
+
+The checker enforces only mechanical guarantees for semantic tasks: required task metadata and
+section order, non-empty declared sweep terms, and presence of the required pre-approval sweep
+section. It does not require or evaluate core-file, additional-dependent, or hit-disposition
+prose. Placeholder disposition prose therefore passes when the mechanical structure is valid;
+the spec audit or review must reject it when it is not meaningful or complete.
+
+This decision affects Scope item 6 and criteria 7, 12, 13, and 14. The changed sweep terms are
+`semantic judgment` and `placeholder disposition`. The absolute branch-only rule and all other
+passed behavior remain unchanged.
 
 ### 1. Universal Git authority
 
