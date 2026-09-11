@@ -37,26 +37,10 @@ v1 scope is bio and medtech only (ADR-014). The architecture stays sector-agnost
 
 ---
 
-## 2. What exists and works
+## 2. Current-state pointer
 
-One connector end to end, with real data in Postgres (Neon).
-
-- **Storage layer** — polite fetching, per-domain rate limiting, robots handling, SHA-256
-  content addressing, deduplication. Offline ingestion path for committed fixtures.
-- **Provenance** — enforced in CI. A signal's source URL and retrieval time are reachable via
-  `signal.raw_doc_id`, never duplicated onto the signal.
-- **Connector contract** — ABC, non-instantiating registry, orchestrator with per-source failure
-  isolation and typed health columns. Parser purity enforced by test.
-- **BIRAC BIG connector** — parses BIG-21 and BIG-24 PDFs. **102 real signals in Neon.**
-- **Classification** — five applicant classes with confidence. Shape-based inference is recorded
-  as low-confidence, never as fact.
-- **Idempotency** — re-running adds nothing. Skip keyed on `(raw_doc_id, extractor_version)`.
-- **Minimal resolution** — 65 companies, 25 persons, 25 watchlist rows, 12 signals awaiting
-  human classification.
-
-Roughly 117 tests. Migration head as of writing: `9d6f1e2a4b80`.
-
-**Nothing renders any of this.** There is no surface. That is the largest gap.
+Read `PROGRESS.md` for the current implementation, next work, blockers, and partial research
+status. This document keeps only durable orientation and project-specific warnings.
 
 ---
 
@@ -186,23 +170,3 @@ Stated plainly so it is not discovered late.
 
 The agent architecture makes the mechanical half reliable. It does not make the judgement half
 optional. Product questions escalate — see the boundary in `docs/AGENT_ARCHITECTURE.md`.
-
----
-
-## 7. Research state
-
-Two exercises, both partial, both in `docs/FEASIBILITY_TEST.md`.
-
-**Lead-time test** — 3 companies traced backwards from a funding round. Found the 5-to-13-year
-gap that invalidated the original thesis.
-
-**BIG-21 back-test** — **4 of 51 awardees checked.** One raised institutional equity, two are on
-a grant treadmill, one has no traceable outcome. Outcomes are three classes, not two, and the
-grant treadmill is the interesting one: alive, progressing, accumulating further government
-programmes, no private capital. Under the current framing those are targets, not errors.
-
-The unanswered question that matters most is in `docs/SHORTLIST_SCHEMA.md`: **what fraction of
-~800 live watchlist entities would pass the shortlist gate?** If it is half, there is no
-shortlist. Answerable by applying the gate to all 51 BIG-21 awardees.
-
-Requires web access, so the `researcher` agent, not an implementer.

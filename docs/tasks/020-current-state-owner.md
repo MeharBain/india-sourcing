@@ -1,6 +1,6 @@
 # 020 — Consolidate current-state ownership
 
-**Status:** proposed
+**Status:** complete
 **Branch:** task/020-current-state-owner
 **Depends on:** 018 merged
 **Documentation impact:** semantic
@@ -103,6 +103,43 @@ as permitted by Task 018’s sweep rule.
   remain historical.
 
 The implementer records all four commands again after editing and disposes every remaining hit.
+
+### Post-edit impact sweep
+
+After the content migration, the implementer reran the four declared commands against the final
+substantive document state:
+
+```powershell
+rg -n -i "What exists and works|Research state|what has been built|what is next|what is blocked" AGENTS.md docs/CONTEXT.md docs/tasks/README.md docs/AGENT_ARCHITECTURE.md .codex/agents
+rg -n -i "docs/CONTEXT.md section|section [23457]" AGENTS.md docs/CONTEXT.md docs/AGENT_ARCHITECTURE.md .codex/agents
+rg -n -i "BIG-21|4 of 51|800|shortlist gate|Nothing renders|review surface|researcher" docs/CONTEXT.md .codex/agents/researcher.toml
+Get-Content PROGRESS.md -TotalCount 40 | Select-String -CaseSensitive:$false -Pattern "current position|BIG-21|4 of 51|800|shortlist gate|Nothing renders|review surface|researcher"
+```
+
+Remaining-hit dispositions:
+
+- First command: `docs/CONTEXT.md:14` is the retained authoritative-owner row;
+  `docs/AGENT_ARCHITECTURE.md:146` describes what a blocker escalation contains rather than
+  owning project state; `.codex/agents/researcher.toml:25` correctly directs current research-state
+  intake to `PROGRESS.md`. The removed section 2 and section 7 headings produced no hit.
+- Second command: `AGENTS.md:206` refers to PRD section 5 and is unrelated. Every CONTEXT reference
+  names a retained, unchanged section: `.codex/agents/implementer.toml:11` and
+  `.codex/agents/researcher.toml:24` name section 5; `.codex/agents/implementer.toml:13`,
+  `.codex/agents/orchestrator.toml:21`, `.codex/agents/spec-writer.toml:12`, and
+  `.codex/agents/spec-auditor.toml:12,42` name section 3; `.codex/agents/reviewer.toml:15` names
+  section 4. No live agent instruction names CONTEXT section 2 or 7.
+- Third command: `.codex/agents/researcher.toml:1` is the role name. `docs/CONTEXT.md:121`,
+  `:136-137`, and `:148` are durable BIG award-date, honorific, and panel-score domain facts in
+  section 5 and remain there intentionally. CONTEXT has no remaining `4 of 51`, `800`, shortlist
+  gate, rendering-gap, review-surface, or current research-state snapshot.
+- Fourth command: `PROGRESS.md:3` is the current-position heading. `PROGRESS.md:14`, `:16`, and
+  `:19-20` are the four required migrated facts: the rendering/review-surface gap, the BIG-21
+  `4 of 51` three-class result, the roughly 800-entity shortlist-gate question, and the researcher
+  requirement. They are the intended authoritative current-state copy.
+
+These results leave `PROGRESS.md` as the only owner of live build, next-work, blocker, and research
+status. The remaining matches in other files are pointers, durable domain facts, or workflow
+language, not competing snapshots.
 
 ### Content migration
 

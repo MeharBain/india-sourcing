@@ -11,6 +11,15 @@ meeting. It does not predict funding events. The former readiness component is r
 0, and the provisional 0–85 scoring model awaits a separate alignment task against the evidence
 and hard gate specified in `docs/SHORTLIST_SCHEMA.md`.
 
+Nothing renders the collected data yet; the review surface is the largest operational gap.
+
+The BIG-21 back-test has examined 4 of 51 awardees and observed three outcome classes: first
+institutional equity, grant treadmill, and no public outcome found.
+
+The key open product-validation question is what fraction of roughly 800 live entities passes
+the shortlist gate. Completing that external back-test requires the researcher because it
+requires web access.
+
 Session state for this project. Codex reads this at the start of every session and appends to
 it at the end. Do not delete history — the log is the point.
 
@@ -1133,6 +1142,63 @@ Newest entries at the bottom.
 - Independent dual review, quality-gate adjudication, human merge approval, and push authorization
   remain. Task 020 owns current-state consolidation; Task 021 owns Task 009 closure. Neither was
   implemented here.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None.
+
+---
+
+## 2026-09-11 — task 020 current-state owner
+
+**Branch / commits:** `task/020-current-state-owner`, this commit
+**Prompt used:** `docs/tasks/020-current-state-owner.md`
+
+**Changed**
+- Replaced CONTEXT section 2's implementation snapshot with a pointer to `PROGRESS.md`, retained
+  sections 3–6 unchanged, and removed section 7's partial research snapshot.
+- Moved the four unique live facts into the current portion of this file: the missing review
+  surface, BIG-21 `4 of 51` three-class result, roughly 800-entity shortlist-gate question, and
+  researcher requirement.
+- Recorded all four post-edit semantic sweeps and disposed every remaining hit in the task file.
+  Task 019 remains blocked and its implementation has not begun; its task file was not changed.
+
+**Acceptance criteria**
+1. **Met:** CONTEXT line 14 retains the authoritative `PROGRESS.md` row; section 2 is now a pointer
+   without counts or a research-progress snapshot.
+2. **Met:** the retired-heading search has no matches; CONTEXT sections 3, 4, 5, and 6 retain their
+   original numbers and subject headings.
+3. **Met:** PROGRESS lines 14–21 state all four migrated facts above `# Session log`, including
+   the neutral outcome label “no public outcome found.”
+4. **Met:** the bounded diff changes only CONTEXT sections 2 and 7 and only inserts current facts
+   plus this entry in PROGRESS; sections 3–6 and every prior session entry are unchanged.
+5. **Met:** the agent-reference sweep names only unchanged CONTEXT sections 3, 4, and 5; the lone
+   AGENTS match is PRD section 5. No live instruction names CONTEXT section 2 or 7.
+6. **Met:** the task file records the exact four post-edit commands and line-specific disposition
+   for every remaining hit; all matches outside PROGRESS are pointers, workflow text, role naming,
+   or durable domain facts rather than competing state ownership.
+7. **Met:** final documentation-only verification evidence is recorded below.
+8. **Met:** this entry records criterion evidence, file accounting, and unfinished work; the task
+   status is complete.
+9. **Met:** the task depends on `018 merged`; Task 020 implementation completed before Task 019
+   implementation began, and `git diff main...HEAD -- docs/tasks/019-business-advisor-agent.md`
+   is empty. Merge sequencing must preserve that order.
+
+**Verification**
+- `uv run python scripts/check_docs.py` — exit 0; `Documentation checks passed.`
+- `uv run pytest` — exit 0; 133 tests collected, `133 passed in 19.21s`.
+- `uv run ruff check .` — exit 0; `All checks passed!`
+- Pytest and Ruff ran once after the final substantive edit and cover the final substantive diff.
+  This status/evidence update does not invalidate them, and no rerun trigger occurred.
+
+**Files outside the expected list**
+- None.
+
+**Unfinished**
+- Independent review, quality-gate adjudication, and human-authorized merge/push remain.
+- Task 019 remains blocked and no research was executed; both are outside Task 020.
 
 **Assumptions I had to make because the spec didn't say**
 - None.
