@@ -1,8 +1,9 @@
 """Run bounded, dependency-free documentation checks.
 
 This checker validates only configured mechanical rules. It does not infer a task's
-documentation-impact classification, judge semantic consistency, or reject historical wording
-unless an exact phrase/path pair is explicitly configured.
+documentation-impact classification, judge semantic consistency or sweep-disposition quality or
+completeness, or reject historical wording unless an exact phrase/path pair is explicitly
+configured.
 """
 
 from __future__ import annotations
@@ -43,7 +44,9 @@ def _read(path: Path, root: Path, errors: list[str]) -> str | None:
 
 
 def _metadata(content: str, name: str) -> str | None:
-    match = re.search(rf"^\*\*{re.escape(name)}:\*\*\s*(.+?)\s*$", content, re.MULTILINE)
+    match = re.search(
+        rf"^\*\*{re.escape(name)}:\*\*[ \t]*(.*?)[ \t]*$", content, re.MULTILINE
+    )
     return match.group(1).strip() if match else None
 
 
@@ -55,66 +58,6 @@ def _section_body(content: str, heading: str, level: int) -> str | None:
     remainder = content[match.end() :]
     next_heading = re.search(rf"^#{{1,{level}}}\s+", remainder, re.MULTILINE)
     return remainder[: next_heading.start()] if next_heading else remainder
-
-
-def _evidence_entries(content: str) -> list[str]:
-    bullets = re.findall(r"(?ms)^-\s+.*?(?=^-\s+|^#{1,6}\s+|\Z)", content)
-    paragraphs = [
-        paragraph
-        for paragraph in re.split(r"\n\s*\n", content)
-        if not re.search(r"(?m)^-\s+", paragraph)
-    ]
-    return [entry.strip() for entry in [*bullets, *paragraphs] if entry.strip()]
-
-
-def _has_bounded_disposition(entry: str) -> bool:
-    if re.search(r"\bincluded\b", entry, re.IGNORECASE):
-        return True
-    excluded = re.search(r"\bexcluded\b", entry, re.IGNORECASE)
-    if excluded is None:
-        return False
-    remainder = entry[excluded.end() :]
-    return bool(re.search(r"(?:[:—-]|\bbecause\b|\bas\b)\s*\S+", remainder))
-
-
-def _has_disposition_for_tokens(entries: list[str], tokens: list[str]) -> bool:
-    for entry in entries:
-        lowered = entry.lower()
-        if all(token.lower() in lowered for token in tokens) and _has_bounded_disposition(entry):
-            return True
-    return False
-
-
-def _has_additional_dependent_evidence(sweep: str, entries: list[str]) -> bool:
-    for explicit in entries:
-        if "additional dependents" not in explicit.lower():
-            continue
-        detail = re.split(r"additional dependents(?:\s+are)?\s*:?", explicit, flags=re.IGNORECASE)
-        if len(detail) > 1 and (
-            re.search(r"\bnone\b", detail[1], re.IGNORECASE)
-            or re.search(r"(?:[\w./-]+\.(?:md|toml|py|json)|\.codex/agents)", detail[1])
-        ):
-            return True
-
-    # Some already-approved Task 018-era specs combine the dependent inventory with a bounded
-    # hit-disposition section. Accept that form only when its declared search command names a
-    # non-core policy path; a free-floating path elsewhere in the task is not sufficient.
-    return bool(
-        re.search(r"(?im)^hit dispositions:\s*$", sweep)
-        and re.search(
-            r"(?s)```powershell.*?(?:AGENTS\.md|docs/AGENT_ARCHITECTURE\.md|\.codex/agents).*?```",
-            sweep,
-        )
-    )
-
-
-def _has_hit_disposition_evidence(sweep: str) -> bool:
-    marker = re.search(
-        r"(?im)^(?:pre-approval hits?[^\n]*dispositions[^\n]*|pre-gate-1 hit dispositions|"
-        r"hit dispositions|every live hit[^\n]*disposed[^\n]*):?\s*$",
-        sweep,
-    )
-    return marker is not None and bool(re.search(r"(?m)^-\s+", sweep[marker.end() :]))
 
 
 def _check_task(path: Path, root: Path, errors: list[str]) -> None:
@@ -154,40 +97,12 @@ def _check_task(path: Path, root: Path, errors: list[str]) -> None:
             errors.append(f"{relative}: structural task is missing Affected paths metadata")
         return
 
-    if _metadata(content, "Sweep terms") is None:
+    if not _metadata(content, "Sweep terms"):
         errors.append(f"{relative}: semantic task is missing Sweep terms metadata")
     scope = _section_body(content, "Scope", 2)
     sweep = _section_body(scope or "", "Pre-approval impact sweep", 3)
     if sweep is None:
         errors.append(f"{relative}: semantic task is missing a pre-approval impact sweep")
-        return
-
-    entries = _evidence_entries(sweep)
-    core_targets = [
-        ("PRD.md", ["PRD.md"]),
-        ("docs/DECISIONS.md", ["docs/DECISIONS.md"]),
-        ("the current-state block of PROGRESS.md", ["current-state", "PROGRESS.md"]),
-        ("docs/CONTEXT.md", ["docs/CONTEXT.md"]),
-    ]
-    for label, tokens in core_targets:
-        if not _has_disposition_for_tokens(entries, tokens):
-            errors.append(
-                f"{relative}: pre-approval sweep lacks an included/excluded disposition for "
-                f"{label}"
-            )
-
-    if not (
-        _has_disposition_for_tokens(entries, [relative])
-        or _has_disposition_for_tokens(entries, ["this task file"])
-    ):
-        errors.append(
-            f"{relative}: pre-approval sweep lacks an included/excluded disposition for its "
-            "own task file"
-        )
-    if not _has_additional_dependent_evidence(sweep, entries):
-        errors.append(f"{relative}: pre-approval sweep does not list additional dependents")
-    if not _has_hit_disposition_evidence(sweep):
-        errors.append(f"{relative}: pre-approval sweep does not record hit dispositions")
 
 
 def _configured_markdown_files(root: Path, configured: list[str], errors: list[str]) -> list[Path]:

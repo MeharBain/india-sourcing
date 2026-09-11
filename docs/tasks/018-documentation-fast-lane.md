@@ -1,6 +1,6 @@
 # 018 — Documentation fast lane
 
-**Status:** in progress
+**Status:** complete
 **Branch:** task/018-documentation-fast-lane
 **Depends on:** none
 **Documentation impact:** semantic
@@ -182,7 +182,7 @@ command returned these current-policy or safety/history hits:
 - `AGENTS.md:263,280,289,292,317-319,323,331,333-334` â€” retain. These lines require authorized
   blocker pushes, describe the dispatch stage, select one documentation reviewer, impose universal
   merge/push gates, and preserve force-push/history/branch protections.
-- `docs/tasks/README.md:72,101-102,174,185,189,205,207,210,224-225,236-237` â€” retain. These lines
+- `docs/tasks/README.md:72,101-102,176,187,191,209,212,226-227,238-239` â€” retain. These lines
   explain branch visibility and pre-merge reporting, define canonical documentation verification,
   impose universal merge/push gates, and preserve fix-forward history.
 - `docs/AGENT_ARCHITECTURE.md:12,179-180,222,238-239` â€” retain. These lines describe the two
@@ -198,7 +198,7 @@ The second command returned these current, historical, or explicitly deferred hi
 
 - `AGENTS.md:206,286` â€” retain. The first is PRD section 5 source scope; the second is the new
   researcher boundary.
-- `docs/tasks/README.md:35,85,136,232` â€” retain. These are the required Interpretations heading,
+- `docs/tasks/README.md:35,85,136,234` â€” retain. These are the required Interpretations heading,
   historical PRD-section examples, and the new researcher boundary.
 - `docs/AGENT_ARCHITECTURE.md:103,113,159,188,192,198,252,256,263` â€” retain. These are the role,
   interpretation workflow, and write-isolation definitions; the stale mismatch note is gone.
@@ -218,7 +218,7 @@ The third command returned these current-policy, historical, or test-command hit
 
 - `AGENTS.md:178,181,183-184,227,287` â€” retain. These are canonical test commands, connector
   instructions, and the new researcher sweep exclusion.
-- `docs/tasks/README.md:61,63,107,124,127,129,140,142,147,156,161,178-179,189,193,200-201,230,232`
+- `docs/tasks/README.md:61,63,107,124,127,129,140,142,147,156,161,167,180-181,191,195,202-203,232,234`
   â€” retain. These define impact declarations, durable amendments, the historical rationale,
   canonical verification and expected-file/researcher boundaries.
 - `docs/AGENT_ARCHITECTURE.md:22,29,76,86,112` â€” retain. These are historical sweep evidence,
@@ -240,8 +240,10 @@ reviewer selection, verification reuse, expected-file write isolation, or the re
 
 - `uv run python scripts/check_docs.py` exited 0 with the single line
   `Documentation checks passed.`
-- `uv run pytest` exited 0: `128 passed in 42.32s`.
+- `uv run pytest` exited 0: `129 passed in 12.83s`.
 - `uv run ruff check .` exited 0: `All checks passed!`
+- The final focused checker run exited 0: `12 passed in 7.52s`. Its cycle-2 test-first run
+  exited 1 with `2 failed, 9 passed in 6.98s` before the semantic heuristics were removed.
 - Both canonical commands ran after the final substantive change. Subsequent edits only record
   this evidence and completion status. Task 018 adds an executable checker and tests, so it is
   ineligible for the future documentation-only one-run shortcut.
@@ -256,41 +258,19 @@ local task-file-only blocker commit. Criterion 2 and the AGENTS Git policy are a
 absolute rule now sits outside the grammatically conditional â€œwithout being askedâ€ list while
 merge and push remain separately authorized.
 
-The agreed checker finding affects criteria 12-14: semantic validation must inspect the intended
-`Scope` â†’ `Pre-approval impact sweep` structure and behaviorally reject incomplete core-file
-dispositions, missing additional-dependent evidence, and missing hit-disposition evidence. The
-checker remains mechanical: it validates bounded placement and disposition vocabulary without
-claiming to understand the prose. Three focused tests were added without loosening the original
-eight.
+The first review requested automated validation of disposition completeness, which was implemented
+and tested in commit `98acf63`. Rework cycle 2 supersedes that requested boundary: those heuristics
+and their success claims are no longer live requirements because the human assigned disposition
+quality to the spec auditor and reviewer.
 
 Criterion 15 and the post-edit record are also affected: the dependent inventory is six existing
 agent TOMLs, not seven, and all exact search line references must describe the final diff. The
 added consolidated sweep terms are `task branch`, `direct to main`, `pre-approval`, `disposition`,
 `additional dependents`, `hit dispositions`, and `six .codex agents`.
 
-The consolidated rework resweep returned:
-
-- `AGENTS.md:322`, `docs/tasks/README.md:72,94,207`, and
-  `.codex/agents/implementer.toml:57` â€” retain as the absolute task-branch rule, branch-visibility
-  explanation, and implementer stop instruction. No `direct to main` wording remains; the sole
-  exception is explicitly local and task-file-only.
-- `scripts/check_docs.py:90,92,103,113-114,160,162,175,184,188,190` â€” retain as the bounded
-  extraction and actionable failure reasons for additional dependents, hit dispositions, and
-  core/task included-or-excluded evidence inside the pre-approval subsection.
-- `tests/test_doc_checks.py:31,39,41,173,177,184,189,197` â€” retain as the valid fixture and three
-  new negative behavioral assertions. Each negative assertion names the offending task path and
-  the specific missing disposition evidence.
-- `.codex/agents/orchestrator.toml:75` and `.codex/agents/spec-writer.toml:46` â€” retain as current
-  impact-audit and additional-dependent duties.
-- `PROGRESS.md:1066,1088,1091` â€” retain as criterion-2 and strengthened-checker evidence; the
-  completion entry is append-only.
-- `docs/tasks/018-documentation-fast-lane.md:9-10,63,84-85,178,253,259,267-268,274,277-278,302,328-329,406,456`
-  â€” retain. These hits are the expanded metadata, original and post-edit sweep records, durable
-  review amendment and its self-referential evidence record, approved policy text, and acceptance
-  criteria. The corrected line 84 says six existing TOMLs. No hit describes an unapproved
-  merge/push or a seventh TOML; the report's own occurrences do not require recursive resweeps.
-
-No hit requires a product decision or another wording substitution.
+The rework-cycle-1 resweep was superseded with the heuristic checker. Rework cycle 2 records one
+new consolidated final resweep after removing that implementation, using artifact quotes rather
+than brittle self-referential task-file line citations.
 
 ### Review amendment and rework cycle 2 (2026-09-11)
 
@@ -308,6 +288,38 @@ the spec audit or review must reject it when it is not meaningful or complete.
 This decision affects Scope item 6 and criteria 7, 12, 13, and 14. The changed sweep terms are
 `semantic judgment` and `placeholder disposition`. The absolute branch-only rule and all other
 passed behavior remain unchanged.
+
+### Rework-cycle-2 consolidated final resweep (2026-09-11)
+
+After the final substantive edits, the implementer reran the three exact pre-approval commands.
+Their current repository-relative references and dispositions are the complete lists in
+**Post-edit impact sweep (2026-09-11)** above; the updated README references include its explicit
+semantic-checker limitation, and no policy hit was omitted. The implementer also ran:
+
+```text
+rg -n -i "task branch|direct to main|pre-approval|disposition|additional dependent|hit disposition|six \.codex agents|semantic judgment|placeholder disposition" AGENTS.md docs/tasks/README.md docs/AGENT_ARCHITECTURE.md .codex/agents scripts/check_docs.py tests/test_doc_checks.py PROGRESS.md docs/tasks/018-documentation-fast-lane.md
+```
+
+Every targeted hit is disposed as follows without relying on self-referential task line numbers:
+
+- The task's **Review amendment and rework cycle 2**, Scope item 6, checker limitation, and
+  criteria 7, 12, 13, and 14 state the approved mechanical-only boundary and human semantic owner.
+- `docs/tasks/README.md` says a passing checker is not evidence that sweep dispositions are
+  meaningful or complete. `.codex/agents/spec-writer.toml` requires preparing core-file,
+  additional-dependent, and hit dispositions; `.codex/agents/spec-auditor.toml` item 9 audits
+  them; `.codex/agents/reviewer.toml` under **FOR EACH ACCEPTANCE CRITERION** assigns the same
+  judgment to review. The orchestrator's impact sweep and implementer's task-branch stop rules
+  retain their current workflow meanings.
+- `scripts/check_docs.py` documents the limitation and `_check_task` checks only non-empty
+  `Sweep terms` plus the `Pre-approval impact sweep` subsection for semantic tasks.
+- `tests/test_doc_checks.py` names the boundary behavior in
+  `test_placeholder_disposition_prose_is_left_to_semantic_review`,
+  `test_hit_and_dependent_categories_are_not_semantically_required`,
+  `test_missing_or_empty_semantic_sweep_terms_fail`, and
+  `test_missing_semantic_preapproval_section_fails`.
+- `PROGRESS.md` records the same criterion and behavioral-test evidence. No other targeted hit
+  describes live behavior, and the six existing `.codex/agents/*.toml` files are all accounted
+  for across the post-edit sweep.
 
 ### 1. Universal Git authority
 
@@ -395,7 +407,9 @@ configuration. With no arguments it must:
 
 - validate required task metadata and section presence/order for Task 018 onward, including
   `## Interpretations` immediately after `## Intent`;
-- validate the impact declarations in Scope item 3 without inferring their semantic category;
+- for semantic tasks, require non-empty `**Sweep terms:**` metadata and the
+  `### Pre-approval impact sweep` subsection inside `## Scope`, without evaluating the quality or
+  completeness of its core-file, additional-dependent, or hit-disposition prose;
 - validate repository-relative Markdown links in configured Markdown paths, including file
   existence and explicit heading fragments;
 - compare the three marked high-risk mirrors with the canonical block in
@@ -403,8 +417,11 @@ configuration. With no arguments it must:
 - reject only exact retired phrases in explicitly configured paths; and
 - emit actionable path/reason errors with non-zero status, or one concise success line.
 
-Document that the checker cannot judge semantic consistency or context-valid historical wording.
-Add focused behavioral tests using temporary fixture trees. Add no dependency.
+Document that the checker cannot infer semantic classification, judge semantic consistency or
+disposition quality/completeness, or reject context-valid historical wording. The spec auditor and
+reviewer own those semantic checks. Add focused behavioral tests using temporary fixture trees,
+including one proving placeholder disposition prose passes when the mechanical structure is
+valid. Add no dependency.
 
 ## Out of scope
 
@@ -445,7 +462,8 @@ Add focused behavioral tests using temporary fixture trees. Add no dependency.
    CONTEXT section 3 but no longer claim that it identifies unreconciled prediction-era PRD prose.
 7. For Task 018 onward, the convention defines `none`, `structural`, and `semantic` documentation
    impact and every semantic requirement in Scope item 3. The spec-writer and spec-auditor TOMLs
-   respectively require performing and auditing it.
+   respectively require performing and auditing it. The checker requires only non-empty semantic
+   sweep terms and the declared pre-approval subsection; it does not judge the dispositions.
 8. The task convention and orchestrator TOML require durable recording of user/chat amendments and
    one consolidated terminology resweep before implementation/resumption and review, permit only
    mechanically equivalent wording fixes without escalation, and retain product-meaning choices as
@@ -464,15 +482,18 @@ Add focused behavioral tests using temporary fixture trees. Add no dependency.
 12. `scripts/check_docs.py` imports only standard-library modules.
     `uv run python scripts/check_docs.py` exits 0 with one concise success line, using
     `docs/doc-checks.json` to bound the minimum task number, Markdown paths, mirror paths/markers,
-    and retired phrase/path pairs.
+    and retired phrase/path pairs. Its semantic-task checks are limited to non-empty sweep terms
+    and placement of the pre-approval sweep subsection inside Scope.
 13. `tests/test_doc_checks.py` behaviorally proves: valid fixtures pass; missing/out-of-order
-    sections fail; missing semantic sweep metadata fails; nonexistent internal paths fail;
-    nonexistent explicit heading fragments fail; a changed high-risk mirror fails; and a retired
-    phrase fails only inside its configured paths. Every failure assertion checks the offending
-    path and reason, not only the exit code.
-14. The checker/convention say they do not infer semantic classification, judge prose consistency,
-    or ban unconfigured/context-valid historical terms. Neither `pyproject.toml` nor `uv.lock`
-    changes.
+    sections fail; missing or empty semantic sweep metadata and a missing pre-approval subsection
+    fail; placeholder disposition prose passes without semantic evaluation; nonexistent internal
+    paths and explicit heading fragments fail; a changed high-risk mirror fails; and a retired
+    phrase fails only inside its configured paths. Every mechanical failure assertion checks the
+    offending path and reason, not only the exit code.
+14. The checker/convention say they do not infer semantic classification, judge prose consistency
+    or disposition quality/completeness, or ban unconfigured/context-valid historical terms. They
+    assign semantic disposition review to the spec auditor and reviewer. Neither `pyproject.toml`
+    nor `uv.lock` changes.
 15. This task contains a post-edit rerun of all three pre-approval search commands with every
     remaining hit disposed. No live instruction contradicts universal merge approval, explicit
     push authorization, canonical reviewer selection, verification reuse, expected-file write

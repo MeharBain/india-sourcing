@@ -152,8 +152,17 @@ def test_missing_or_out_of_order_sections_fail(
     assert reason in result.stderr
 
 
-def test_missing_semantic_sweep_metadata_fails(valid_tree: Path) -> None:
-    _write(valid_tree, "docs/tasks/018-example.md", _task().replace("**Sweep terms:**", "**Terms:**"))
+@pytest.mark.parametrize(
+    "content",
+    [
+        _task().replace("**Sweep terms:**", "**Terms:**"),
+        _task().replace("**Sweep terms:** `term`; `synonym`", "**Sweep terms:**   "),
+    ],
+)
+def test_missing_or_empty_semantic_sweep_terms_fail(
+    valid_tree: Path, content: str
+) -> None:
+    _write(valid_tree, "docs/tasks/018-example.md", content)
 
     result = _run(valid_tree)
 
@@ -162,39 +171,52 @@ def test_missing_semantic_sweep_metadata_fails(valid_tree: Path) -> None:
     assert "semantic task is missing Sweep terms metadata" in result.stderr
 
 
-def test_incomplete_core_disposition_fails(valid_tree: Path) -> None:
-    content = _task().replace("`PRD.md` — included.", "`PRD.md` — mentioned.")
-    _write(valid_tree, "docs/tasks/018-example.md", content)
-
-    result = _run(valid_tree)
-
-    assert result.returncode == 1
-    assert "docs/tasks/018-example.md" in result.stderr
-    assert "pre-approval sweep lacks an included/excluded disposition for PRD.md" in result.stderr
-
-
-def test_missing_additional_dependent_disposition_fails(valid_tree: Path) -> None:
-    content = _task().replace("Additional dependents: `docs/extra.md`.\n\n", "")
-    _write(valid_tree, "docs/tasks/018-example.md", content)
-
-    result = _run(valid_tree)
-
-    assert result.returncode == 1
-    assert "docs/tasks/018-example.md" in result.stderr
-    assert "pre-approval sweep does not list additional dependents" in result.stderr
-
-
-def test_missing_hit_dispositions_fails(valid_tree: Path) -> None:
+def test_placeholder_disposition_prose_is_left_to_semantic_review(valid_tree: Path) -> None:
     content = _task().replace(
-        "Pre-Gate-1 hit dispositions:\n\n- `docs/extra.md` — retained.\n", ""
+        "- `PRD.md` — included.\n"
+        "- `docs/DECISIONS.md` — included.\n"
+        "- The current-state block of `PROGRESS.md` — included.\n"
+        "- `docs/CONTEXT.md` — included.\n"
+        "- This task file, `docs/tasks/018-example.md` — included.\n\n"
+        "Additional dependents: `docs/extra.md`.\n\n"
+        "Pre-Gate-1 hit dispositions:\n\n"
+        "- `docs/extra.md` — retained.\n",
+        "Placeholder disposition prose.\n",
     )
     _write(valid_tree, "docs/tasks/018-example.md", content)
 
     result = _run(valid_tree)
 
+    assert result.returncode == 0
+    assert result.stdout.splitlines() == ["Documentation checks passed."]
+    assert result.stderr == ""
+
+
+def test_missing_semantic_preapproval_section_fails(valid_tree: Path) -> None:
+    content = _task().replace("### Pre-approval impact sweep", "### Evidence inventory")
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
     assert result.returncode == 1
     assert "docs/tasks/018-example.md" in result.stderr
-    assert "pre-approval sweep does not record hit dispositions" in result.stderr
+    assert "semantic task is missing a pre-approval impact sweep" in result.stderr
+
+
+def test_hit_and_dependent_categories_are_not_semantically_required(valid_tree: Path) -> None:
+    content = _task().replace(
+        "Additional dependents: `docs/extra.md`.\n\n"
+        "Pre-Gate-1 hit dispositions:\n\n"
+        "- `docs/extra.md` — retained.\n",
+        "Sweep evidence awaiting human semantic review.\n",
+    )
+    _write(valid_tree, "docs/tasks/018-example.md", content)
+
+    result = _run(valid_tree)
+
+    assert result.returncode == 0
+    assert result.stdout.splitlines() == ["Documentation checks passed."]
+    assert result.stderr == ""
 
 
 def test_nonexistent_internal_path_fails(valid_tree: Path) -> None:

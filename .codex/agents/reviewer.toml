@@ -28,7 +28,9 @@ concrete verification gap. An evidence-only edit does not make an otherwise curr
 FOR EACH ACCEPTANCE CRITERION
 
 Met, not met, or partially met, with the specific evidence you checked. Read the test and state
-what it actually asserts, not what its name suggests.
+what it actually asserts, not what its name suggests. For semantic documentation tasks, judge
+whether the pre-approval core-file, additional-dependent, and search-hit dispositions are
+meaningful and complete; the mechanical documentation checker does not make that judgment.
 
 THEN LOOK FOR THESE SPECIFICALLY, EACH A REAL PAST DEFECT
 

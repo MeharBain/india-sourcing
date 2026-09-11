@@ -164,8 +164,10 @@ hits may share one disposition only when the entry enumerates every grouped file
 unnumbered "other matches are fine" bucket is incomplete.
 
 The dependency-free checker validates only configured mechanical structure and paths. It cannot
-infer the semantic classification, judge prose consistency, or ban unconfigured or
-context-valid historical terms.
+infer the semantic classification, judge prose consistency or sweep-disposition quality or
+completeness, or ban unconfigured or context-valid historical terms. The spec auditor and
+reviewer own those semantic judgments; a passing checker is not evidence that the dispositions
+are meaningful or complete.
 
 ---
 

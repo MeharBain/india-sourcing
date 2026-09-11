@@ -1056,9 +1056,11 @@ Newest entries at the bottom.
 - Restricted researcher dispatch to external web research, source audits, back-tests, dossier
   assembly, and fetching external artifacts; ordinary repository documentation stays in the
   normal spec/implement/review cycle.
-- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and eleven
-  behavioral CLI tests using temporary fixture repositories. The checker explicitly does not
-  infer semantic classification, judge prose consistency, or ban unconfigured historical terms.
+- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and twelve
+  behavioral CLI cases using temporary fixture repositories. The checker explicitly does not
+  infer semantic classification, judge prose consistency or sweep-disposition quality or
+  completeness, or ban unconfigured historical terms; the spec auditor and reviewer own those
+  semantic judgments.
 - Deleted the resolved `Interpretations` mismatch from `docs/CONTEXT.md`.
 
 **Acceptance criteria**
@@ -1075,7 +1077,8 @@ Newest entries at the bottom.
 6. **Met:** `Interpretations` is required immediately after `Intent`; the three stale mismatch
    references are gone while current CONTEXT section 3 intake remains.
 7. **Met:** the convention defines all three impact classes and the semantic sweep; spec-writer and
-   spec-auditor contracts respectively perform and audit it.
+   spec-auditor contracts respectively perform and audit it. For semantic tasks the checker only
+   requires non-empty sweep terms and the pre-approval subsection.
 8. **Met:** the convention and orchestrator require dated durable amendments and one consolidated
    terminology resweep, allow only mechanical wording substitutions, and block product choices.
 9. **Met:** the owner and implementer/reviewer/orchestrator contracts contain timing, exact evidence,
@@ -1085,14 +1088,15 @@ Newest entries at the bottom.
 11. **Met:** the configured contradiction search exited 1 with no matches; the orchestrator has no
     live automatic-merge outcome.
 12. **Met:** the checker imports only Python standard-library modules, uses bounded JSON config,
-    inspects the intended pre-approval sweep subsection, and exits 0 with exactly
-    `Documentation checks passed.`
-13. **Met:** eleven tests behaviorally cover valid fixtures; missing and out-of-order sections;
-    missing semantic metadata; incomplete core, additional-dependent, and hit dispositions;
-    missing paths/fragments; mirror drift; and path-scoped retired phrases. Every failure assertion
-    checks path and reason.
-14. **Met:** checker and convention document their semantic limits; `pyproject.toml` and `uv.lock`
-    are unchanged.
+    mechanically requires non-empty semantic sweep terms and the pre-approval subsection inside
+    Scope, and exits 0 with exactly `Documentation checks passed.`
+13. **Met:** twelve behavioral CLI cases cover valid fixtures; missing and out-of-order sections;
+    missing and empty semantic sweep metadata; a missing pre-approval subsection; placeholder
+    disposition prose passing without semantic evaluation; missing paths/fragments; mirror drift;
+    and path-scoped retired phrases. Every failure assertion checks path and reason.
+14. **Met:** checker and convention document that disposition quality/completeness is outside
+    automation and assign it to the spec auditor and reviewer; `pyproject.toml` and `uv.lock` are
+    unchanged.
 15. **Met:** all three post-edit searches and every remaining hit disposition are recorded in the
     task; the contradiction search is empty and current-state migration remains delegated to 020.
 16. **Met:** final canonical verification passed after the final substantive change. Task 018 is
@@ -1102,19 +1106,21 @@ Newest entries at the bottom.
 
 **Verification**
 - `uv run python scripts/check_docs.py` â€” exit 0; `Documentation checks passed.`
-- `uv run pytest` â€” exit 0; 128 tests collected, `128 passed in 42.32s`.
+- `uv run pytest` â€” exit 0; 129 tests collected, `129 passed in 12.83s`.
 - `uv run ruff check .` â€” exit 0; `All checks passed!`
 - Pytest and Ruff ran after the final substantive change and cover that diff. The later task/status
   and PROGRESS edits record only evidence, so they do not invalidate the run. No rerun trigger
   occurred.
 - Focused test-first evidence: before the checker existed, all eight original tests failed because
   the script path was absent; after implementation, `8 passed in 3.99s`. In rework cycle 1, the
-  three new disposition tests failed against the original checker before implementation; the full
-  final suite includes all eleven checker tests. The final focused run was `11 passed in 12.69s`.
+  three then-required heuristic tests failed before implementation. In rework cycle 2, the two
+  boundary-pass cases failed against those heuristics (`2 failed, 9 passed in 6.98s`) before the
+  human-approved mechanical-only boundary was implemented; the final focused run was
+  `12 passed in 7.52s`.
 - JSON and every `.codex/agents/*.toml` file parsed with Python's standard library.
 
 **Behavioural/proxy disclosure**
-- The eleven checker tests invoke the real CLI against temporary repository trees and assert its
+- The twelve checker cases invoke the real CLI against temporary repository trees and assert its
   observable output and exit status. They are behavioral tests, not proxies.
 
 **Files outside the expected list**
