@@ -2,7 +2,7 @@
 
 **Status:** blocked
 **Branch:** task/019-business-advisor-agent
-**Depends on:** 018 merged
+**Depends on:** 018 merged, 020 merged
 **Documentation impact:** semantic
 **Sweep terms:** `business-advisor`; `business advisor`; `next best step`;
 `best next upgrade`; `best next feature`; `product decisions`; `Six agents`;
@@ -81,9 +81,9 @@ This semantic specification was prepared against the Task-018 core set before Ga
   read-only advisory role. Existing ADRs constrain recommendations and remain authoritative.
 - **The current-state block of `PROGRESS.md`: included.** It has no sweep-term hit and its product
   summary is not reframed. The file receives only the Task 019 completion entry required by the
-  task convention; Task 018 remains responsible for its own current-state consolidation.
+  task convention; Task 020 owns current-state consolidation.
 - **`docs/CONTEXT.md`: included and unchanged.** Its references to agent architecture and product
-  escalation remain correct; Task 018 owns any removal of duplicated current-state snapshots.
+  escalation remain correct; Task 020 owns removal of duplicated current-state snapshots.
 - **This task file: included.** Its interpretations, scope, criteria, and sweep vocabulary use the
   same advisor, lane, authority, invocation, roster, and isolation terms.
 - **Additional dependents found:** `AGENTS.md`, `docs/AGENT_ARCHITECTURE.md`,

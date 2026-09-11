@@ -262,3 +262,37 @@ not start until the decision is recorded, implemented, and reviewed.
 wording and dependency corrections described above. The sweep terms, scope, criteria, expected-file
 list, and risks are amended accordingly. Task 019 remains blocked for its other recorded decisions
 and cannot begin implementation until Task 020 is merged.
+
+### 2026-09-11 — approved amendment resweep
+
+After applying the three bounded Task 019 corrections, the implementer ran:
+
+```powershell
+rg -n -i "current state|current-state" AGENTS.md PRD.md PROGRESS.md docs .codex/agents
+```
+
+Every remaining hit is disposed below. Grouped entries enumerate every file and line sharing the
+same disposition.
+
+- `PROGRESS.md:45` is the live Task 019 blocker, updated to say its ownership issue is resolved
+  while its other two questions remain. `PROGRESS.md:1110`, `:1141`, `:1152`, and `:1154-1155`
+  are Task 018 and Task 020 session evidence that correctly assigns the migration to Task 020.
+- `docs/CONTEXT.md:40` is the intended pointer to the authoritative live status in `PROGRESS.md`.
+- `.codex/agents/spec-auditor.toml:49` and `.codex/agents/spec-writer.toml:44` define the semantic
+  sweep's required core-file coverage; neither owns repository status.
+- `docs/tasks/006-source-health-columns.md:39,53` uses the words for a source-health field's value,
+  not repository status. `docs/tasks/017-product-reframe.md:366,371` is historical rework evidence.
+- `docs/tasks/018-documentation-fast-lane.md:45,78-79,158,160,172,235,390,460,535` consistently
+  delegates this migration to Task 020 or describes the documentation-sweep policy and history.
+- `docs/tasks/019-business-advisor-agent.md:82,84,86,123,145` now either assigns consolidation to
+  Task 020 or describes the advisor's future repository intake. Its later blocker at `:372-374`
+  remains unchanged as required historical context for the approved correction.
+- `docs/tasks/README.md:157` defines the semantic sweep's core files and is not a status claim.
+- `docs/tasks/020-current-state-owner.md:1,4,10,42,65,67,78,93,96,100,143,169,184,199,211,218`
+  defines or records this task's ownership migration. Lines `:239,242,249,253` are its durable
+  blocker record. Lines `:271,291` are the exact resweep command and this self-disposition record.
+- `docs/tasks/021-close-task-009.md:41,48,56,77,108` scopes Task 021 against Task 020 and retains
+  its own pre-approval sweep/history; it does not compete for ownership.
+- `AGENTS.md` and `PRD.md` returned no hits. All remaining matches are accurate policy, history,
+  domain-field descriptions, pointers, or Task 020 ownership records; no competing live snapshot
+  or owner remains.

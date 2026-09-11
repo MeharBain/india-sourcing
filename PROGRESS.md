@@ -40,12 +40,10 @@ Newest entries at the bottom.
 6. **Do not bump any `extractor_version` until supersession exists.** Doing so silently doubles
    the signals for every affected document.
 7. **Task 019 business-advisor specification is blocked after two failed audits.** Human direction
-   is required on three bounded corrections before a fresh spec cycle: require or omit an explicit
-   `model_reasoning_effort`; make the advisor compatible with current state both before and after
-   proposed Task 020 (or reorder the dependency); and replace the undefined `product-document`
-   exclusion with exact paths. The recommended resolution is `model_reasoning_effort = "high"`,
-   keep Task 019 before Task 020 while supporting both repository layouts, and enumerate the
-   protected product paths. No implementation has started.
+   is still required on two bounded corrections before a fresh spec cycle: require or omit an
+   explicit `model_reasoning_effort`, and replace the undefined `product-document` exclusion with
+   exact paths. Its current-state ownership blocker is resolved by Task 020's dependency and
+   wording corrections. No implementation has started.
 
 ## Assumptions not yet validated
 
@@ -1163,7 +1161,9 @@ Newest entries at the bottom.
   surface, BIG-21 `4 of 51` three-class result, roughly 800-entity shortlist-gate question, and
   researcher requirement.
 - Recorded all four post-edit semantic sweeps and disposed every remaining hit in the task file.
-  Task 019 remains blocked and its implementation has not begun; its task file was not changed.
+  The approved amendment resweep is also recorded hit by hit.
+- Added `020 merged` to Task 019's dependency metadata and corrected exactly two stale ownership
+  statements. Task 019 remains blocked and its implementation has not begun.
 
 **Acceptance criteria**
 1. **Met:** CONTEXT line 14 retains the authoritative `PROGRESS.md` row; section 2 is now a pointer
@@ -1176,29 +1176,35 @@ Newest entries at the bottom.
    plus this entry in PROGRESS; sections 3–6 and every prior session entry are unchanged.
 5. **Met:** the agent-reference sweep names only unchanged CONTEXT sections 3, 4, and 5; the lone
    AGENTS match is PRD section 5. No live instruction names CONTEXT section 2 or 7.
-6. **Met:** the task file records the exact four post-edit commands and line-specific disposition
-   for every remaining hit; all matches outside PROGRESS are pointers, workflow text, role naming,
-   or durable domain facts rather than competing state ownership.
+6. **Met:** the task file records the exact four original post-edit commands plus the approved
+   amendment resweep and line-specific disposition for every remaining hit; all matches outside
+   PROGRESS are pointers, workflow text, historical records, or durable domain facts rather than
+   competing state ownership.
 7. **Met:** final documentation-only verification evidence is recorded below.
 8. **Met:** this entry records criterion evidence, file accounting, and unfinished work; the task
    status is complete.
 9. **Met:** the task depends on `018 merged`; Task 020 implementation completed before Task 019
-   implementation began, and `git diff main...HEAD -- docs/tasks/019-business-advisor-agent.md`
-   is empty. Merge sequencing must preserve that order.
+   implementation began. The Task 019 diff contains only the added `020 merged` dependency and
+   the two authorized ownership substitutions. Merge sequencing must preserve that order.
 
 **Verification**
-- `uv run python scripts/check_docs.py` — exit 0; `Documentation checks passed.`
-- `uv run pytest` — exit 0; 133 tests collected, `133 passed in 19.21s`.
+- `uv run python scripts/check_docs.py` — exit 0; `Documentation checks passed.` The first
+  sandboxed attempt exited 1 before the checker ran because the shared uv cache was inaccessible;
+  rerunning the same command with cache access succeeded without a content change.
+- `uv run pytest` — exit 0; 133 tests collected, `133 passed in 21.22s`.
 - `uv run ruff check .` — exit 0; `All checks passed!`
-- Pytest and Ruff ran once after the final substantive edit and cover the final substantive diff.
-  This status/evidence update does not invalidate them, and no rerun trigger occurred.
+- All three successful commands ran after the final substantive edit and cover the final
+  substantive diff. The approved amendment and review finding changed relevant content after the
+  earlier evidence, so the rerun trigger occurred and this evidence replaces the original run.
+  This status/evidence-only update does not invalidate it.
 
 **Files outside the expected list**
 - None.
 
 **Unfinished**
 - Independent review, quality-gate adjudication, and human-authorized merge/push remain.
-- Task 019 remains blocked and no research was executed; both are outside Task 020.
+- Task 019's two unrelated specification blockers remain unresolved and no research was executed;
+  both are outside Task 020.
 
 **Assumptions I had to make because the spec didn't say**
 - None.
