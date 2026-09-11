@@ -260,7 +260,8 @@ convention before starting any task.
   met, with specific evidence. Partially met is an acceptable answer.
 - A product or architecture question known before you act is a **blocker**, not an
   assumption. Follow the blocker protocol in `docs/tasks/README.md`: append to the task
-  file, set status blocked, commit the task file alone to `main`, and stop.
+  file, set status blocked, commit the task file alone to local `main`, ask before pushing,
+  report that it is not remotely visible until authorized, and stop.
 - `docs/CODEX_KICKOFF.md` is historical. Do not take instructions from it.
 
 ---
@@ -282,9 +283,25 @@ task path and branch → Stage 4 adjudicate against the quality gates → Stage 
 - Never review work you dispatched
 - Never resolve a product question — escalate it, per the boundary in
   `docs/AGENT_ARCHITECTURE.md`
-- Dual review and a Gate 2 merge approval are required for `src/core/models.py`,
-  anything under `migrations/`, `src/connectors/base.py`, ADR amendments, and any
-  threshold or weight. Everything else merges autonomously.
+- Do not dispatch the researcher for ordinary documentation editing, repository terminology
+  sweeps, or policy changes. Use it only for external web research, source audits, back-tests,
+  dossier assembly, or fetching external artifacts.
+- Ordinary documentation-only work gets one independent reviewer. The canonical high-risk list
+  below selects diffs that require two independent reviewers. Reviewer disagreement on any
+  criterion is a hard blocker.
+- Every diff stops for explicit human merge approval after review and quality gates pass.
+
+<!-- CANONICAL HIGH-RISK LIST START -->
+A diff requires two independent reviewers if it:
+
+- changes `src/core/models.py`;
+- changes any file under `migrations/`;
+- changes `src/connectors/base.py`;
+- changes `.codex/agents/orchestrator.toml`;
+- changes `docs/AGENT_ARCHITECTURE.md`;
+- amends `docs/DECISIONS.md`; or
+- changes any numerical threshold, confidence value, or scoring weight in any path.
+<!-- CANONICAL HIGH-RISK LIST END -->
 
 **Exceptions, which must be stated explicitly:** resuming a blocked task, a one-off
 research request, or a direct instruction to skip a stage. Absent those, run the
@@ -296,8 +313,15 @@ full cycle.
 
 You run git in this repository. The human does not. Accordingly:
 
-**You may:** `status`, `diff`, `log`, `add`, `commit`, `branch`, `checkout -b`, `merge`
-(fast-forward or a normal merge commit), `push` to a named branch, `remote -v`, `remote add`.
+**You may:** `status`, `diff`, `log`, `add`, `commit`, `branch`, `checkout -b`, `remote -v`,
+`remote add`. You may `merge` (fast-forward or a normal merge commit) only after explicit human
+approval in the current session, and may `push` `main` or a named branch only after explicit user
+authorization in the current session. Merge and push are separate gates: neither permission
+implies the other unless the user explicitly grants both together. A pull request is optional.
+
+All task work uses a task branch. The sole direct-local-`main` exception is the task-file-only
+blocker commit required by `docs/tasks/README.md`; it still cannot be pushed without explicit
+authorization in the current session.
 
 **You must never, without being asked in that specific session:**
 
@@ -308,8 +332,7 @@ You run git in this repository. The human does not. Accordingly:
 - `git add .env`, any file containing a key or token, or anything matched by `.gitignore`.
   If `git status` shows a credential-bearing file as untracked, add it to `.gitignore` and say
   so rather than committing it.
-- Commit directly to `main` when the change is code. Documentation and `PROGRESS.md` updates
-  on `main` are fine; code goes on a `task/NN-name` branch.
+- Commit task work directly to `main`, except for the task-file-only local blocker record above.
 
 **Before every commit:** run `git status` and `git diff --staged`, and state in your reply
 what you are about to commit and why. If the staged set includes anything you did not

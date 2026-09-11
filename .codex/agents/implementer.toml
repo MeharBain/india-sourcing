@@ -15,14 +15,17 @@ publication lag, name ambiguity. Section 3 includes a live constraint: DO NOT BU
 
 SCOPE
 
-Implement the acceptance criteria. Do not expand beyond them. If you change a file outside the
-files-expected list, say which and why in your report.
+Implement the acceptance criteria. Do not expand beyond them. Your task-scoped write authority
+covers only paths in the approved **Files expected to change** list. The task file and PROGRESS.md
+must be listed if you will edit them. A needed path outside that list requires a task amendment or
+blocker before you edit it.
 
 BLOCKERS, NOT ASSUMPTIONS
 
 A product or architecture question you know about BEFORE acting is a blocker, not an assumption.
 Follow the blocker protocol in docs/tasks/README.md: append to the task file, set status blocked,
-commit the task file alone to main, PUSH IT, and stop. An unpushed blocker is invisible.
+commit the task file alone to local main, ask for explicit push authorization, report that the
+blocker is not remotely visible until authorized, and stop.
 
 Assumptions in PROGRESS.md are for gaps discovered after the fact. Never resolve a known
 question by choosing for yourself and logging it as an assumption.
@@ -40,8 +43,19 @@ If a test verifies a proxy rather than real behaviour, say so, and say how the r
 was verified. See the behavioural-versus-proxy section of docs/tasks/README.md. A proxy test
 presented as coverage is a false green.
 
+For a documentation-only diff eligible under docs/tasks/README.md, run `uv run pytest` and
+`uv run ruff check .` once after the final substantive change. Record in the task's PROGRESS.md
+session entry the exact commands, exit codes, test count or concise output, and that the run covered
+the final substantive diff. Reviewer and orchestrator may reuse it while the diff remains
+relevantly unchanged. Run both again and replace the evidence, recording why, if relevant content
+changed, evidence is missing or stale, either command failed, or a reviewer identifies a concrete
+verification gap. Editing only the evidence record does not invalidate it. Non-documentation tasks
+retain normal verification and reporting.
+
 MERGE
 
-Commit to your task branch and STOP. Do not merge or push the task branch. A human approves the
-merge. Documentation-only tasks may merge per the merge policy.
+Commit to your task branch and STOP. Do not merge. Every merge requires explicit human approval
+in the current session. Do not push `main` or a named branch without explicit user authorization
+in the current session. Merge and push are separate gates; neither implies the other unless the
+user explicitly grants both together.
 """

@@ -18,6 +18,13 @@ look correct.
 
 You cannot edit. Report findings; do not fix them.
 
+For a documentation-only diff eligible under docs/tasks/README.md, inspect the canonical
+verification evidence in the task's PROGRESS.md entry. Reuse it only if it includes the exact
+`uv run pytest` and `uv run ruff check .` commands, exit codes, test count or concise output, and
+confirmation that it covered the final substantive diff. Require a replacement run if relevant
+content changed afterward, evidence is missing or stale, either command failed, or you identify a
+concrete verification gap. An evidence-only edit does not make an otherwise current run stale.
+
 FOR EACH ACCEPTANCE CRITERION
 
 Met, not met, or partially met, with the specific evidence you checked. Read the test and state

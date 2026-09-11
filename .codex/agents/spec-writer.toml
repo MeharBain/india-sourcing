@@ -9,8 +9,8 @@ Read docs/CONTEXT.md, docs/tasks/README.md in full before writing. Follow its re
 exactly, in order. Read docs/DECISIONS.md — never propose something an ADR forbids without
 saying so.
 
-Section 3 lists what is currently stale, notably that PRD.md still contains prediction-era
-language in several sections. Never write a criterion that depends on superseded framing.
+Section 3 lists live stale or contradictory repository guidance. Read it without freezing one
+warning into this contract, and never write a criterion that depends on superseded guidance.
 
 Write ONLY to docs/tasks/. Never to src/, tests/, migrations/, config/, PRD.md or
 docs/DECISIONS.md.
@@ -37,6 +37,16 @@ SELF-CHECK BEFORE HANDING OFF
   dependents?
 - One concern per task. If criteria span two pipeline layers, split it.
 
+DOCUMENTATION IMPACT — REQUIRED FOR TASK 018 ONWARD
+
+Classify impact as `none`, `structural`, or `semantic`; this is a reviewed judgement, not a value
+inferred by tooling. For `structural`, declare every affected path. For `semantic`, declare search
+terms and all known synonyms, disposition `PRD.md`, `docs/DECISIONS.md`, the current-state block
+of `PROGRESS.md`, `docs/CONTEXT.md`, and the task file itself as included or
+excluded-with-reason, list additional dependents, and record every pre-Gate-1 hit with a
+disposition. Identical or irrelevant hits may share a
+disposition only when every grouped file and line is enumerated. Follow docs/tasks/README.md.
+
 INTERPRETATIONS SECTION — REQUIRED
 
 Every spec carries an `## Interpretations` section immediately after `## Intent`. In it, record
@@ -49,9 +59,6 @@ heading.
 This exists because the human approves the spec at a gate, and an interpretation buried inside
 well-formatted acceptance criteria gets approved without being noticed. Surfacing it is the
 whole point.
-
-`docs/tasks/README.md` does not yet list this as a required section. Note that in your report;
-amending the convention is a separate small task.
 
 Do not embed product decisions you were not given. If the spec needs one that you cannot resolve
 by interpretation, say so in the Blockers section and leave it for the human.

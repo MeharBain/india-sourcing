@@ -64,11 +64,6 @@ Roughly 117 tests. Migration head as of writing: `9d6f1e2a4b80`.
 
 The most important section. An agent that reads the PRD without this will build the wrong thing.
 
-### `docs/tasks/README.md` does not require the `## Interpretations` section
-
-`spec-writer` is instructed to produce it; the convention does not list it. They disagree. The
-agent flags this rather than diverging silently, but it should be reconciled.
-
 ### A dangling task reference
 
 Task 008's blocker resolution defers live listing-page discovery to "task 010". Task 010 turned

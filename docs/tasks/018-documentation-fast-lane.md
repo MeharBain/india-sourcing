@@ -1,6 +1,6 @@
 # 018 — Documentation fast lane
 
-**Status:** proposed
+**Status:** complete
 **Branch:** task/018-documentation-fast-lane
 **Depends on:** none
 **Documentation impact:** semantic
@@ -79,6 +79,10 @@ Core-file dispositions:
   snapshots and section structure are deliberately Task 020.
 - `docs/tasks/018-documentation-fast-lane.md` — included; its terminology, criteria, file list,
   bootstrap authority, and dependency split were checked together.
+
+Additional dependents are the seven `.codex/agents/*.toml` role contracts and
+`docs/AGENT_ARCHITECTURE.md`; the hit dispositions below enumerate their affected lines. No other
+dependent requires an edit.
 
 Every live hit from the searches is disposed as follows:
 
@@ -167,6 +171,80 @@ Every live hit from the searches is disposed as follows:
   `PROGRESS.md`. This task file’s hits specify the new policy or quote the before-state for audit.
 
 The implementer records a post-edit pass over the same commands and dispositions in this task.
+
+### Post-edit impact sweep (2026-09-11)
+
+The implementer reran all three pre-approval commands after the substantive edits. The first
+command returned these current-policy or safety/history hits:
+
+- `AGENTS.md:263,280,289,292,317-319,323,328,330-331` â€” retain. These lines require authorized
+  blocker pushes, describe the dispatch stage, select one documentation reviewer, impose universal
+  merge/push gates, and preserve force-push/history/branch protections.
+- `docs/tasks/README.md:72,101-102,174,185,189,205,207,210,224-225,236-237` â€” retain. These lines
+  explain branch visibility and pre-merge reporting, define canonical documentation verification,
+  impose universal merge/push gates, and preserve fix-forward history.
+- `docs/AGENT_ARCHITECTURE.md:12,179-180,222,238-239` â€” retain. These lines describe the two
+  universal human gates, canonical reviewer selection, and separate push authorization.
+- `.codex/agents/reviewer.toml:21`, `.codex/agents/implementer.toml:2,27,46,55,57-59` â€” retain.
+  These are the reviewer reuse duty and implementer stop/authorization duties.
+- `.codex/agents/orchestrator.toml:2,10,12-13,88,119-120,133,168,195,200-202,205,249-250,257` â€”
+  retain. These are current gate, review, blocker-visibility, verification-reuse, history, and
+  final-state instructions. â€œRun autonomouslyâ€ at line 12 describes execution between human gates,
+  not autonomous merge or push authority.
+
+The second command returned these current, historical, or explicitly deferred hits:
+
+- `AGENTS.md:206,286` â€” retain. The first is PRD section 5 source scope; the second is the new
+  researcher boundary.
+- `docs/tasks/README.md:35,85,136,232` â€” retain. These are the required Interpretations heading,
+  historical PRD-section examples, and the new researcher boundary.
+- `docs/AGENT_ARCHITECTURE.md:103,113,159,188,192,198,252,256,263` â€” retain. These are the role,
+  interpretation workflow, and write-isolation definitions; the stale mismatch note is gone.
+- `docs/CONTEXT.md:95,208` â€” retain and defer to Task 020. Section 13 is a product-plan warning;
+  the researcher line is the current research-state snapshot Task 020 moves to `PROGRESS.md`.
+- `.codex/agents/orchestrator.toml:21,43,49-50,91,113,240` â€” retain. These require current CONTEXT
+  intake, visible interpretations, the researcher boundary, and final reporting.
+- `.codex/agents/implementer.toml:11,13`, `.codex/agents/reviewer.toml:15`,
+  `.codex/agents/spec-writer.toml:12,49,51`, and `.codex/agents/spec-auditor.toml:12,42` â€” retain.
+  Task 020 preserves CONTEXT sections 3-5; the spec-writer stale snapshot is gone and the required
+  Interpretations rule remains.
+- `.codex/agents/researcher.toml:1,24` â€” retain. These are the role name and durable CONTEXT
+  section 5 input; the section 7 dependency is gone and current research state now comes from
+  `PROGRESS.md`.
+
+The third command returned these current-policy, historical, or test-command hits:
+
+- `AGENTS.md:178,181,183-184,227,287` â€” retain. These are canonical test commands, connector
+  instructions, and the new researcher sweep exclusion.
+- `docs/tasks/README.md:61,63,107,124,127,129,140,142,147,156,161,178-179,189,193,200-201,230,232`
+  â€” retain. These define impact declarations, durable amendments, the historical rationale,
+  canonical verification and expected-file/researcher boundaries.
+- `docs/AGENT_ARCHITECTURE.md:22,29,76,86,112` â€” retain. These are historical sweep evidence,
+  auditor duties, expected-file isolation, and researcher routing.
+- `.codex/agents/orchestrator.toml:73,95-97,108,113,169,173` â€” retain. These implement impact
+  sweeps, consolidated amendments, expected-file ownership, researcher routing, and verification
+  reuse.
+- `.codex/agents/implementer.toml:20,46-47,52-53`, `.codex/agents/reviewer.toml:22-23,26`,
+  `.codex/agents/spec-auditor.toml:33-35`, `.codex/agents/spec-writer.toml:36-37`, and
+  `.codex/agents/researcher.toml:8` â€” retain. These are the matching role duties and historical
+  sweep checks; no contract contradicts the owner policy.
+
+The contradiction command in criterion 11 exited 1 with no matches. All remaining numbered
+CONTEXT current-state hits are explicitly deferred to Task 020; Task 021 owns Task 009 closure.
+No live instruction contradicts universal merge approval, explicit push authorization, canonical
+reviewer selection, verification reuse, expected-file write isolation, or the researcher boundary.
+
+### Implementation verification (2026-09-11)
+
+- `uv run python scripts/check_docs.py` exited 0 with the single line
+  `Documentation checks passed.`
+- `uv run pytest` exited 0: `125 passed in 18.02s`.
+- `uv run ruff check .` exited 0: `All checks passed!`
+- Both canonical commands ran after the final substantive change. Subsequent edits only record
+  this evidence and completion status. Task 018 adds an executable checker and tests, so it is
+  ineligible for the future documentation-only one-run shortcut.
+- No path outside **Files expected to change** changed. `pyproject.toml` and `uv.lock` are
+  unchanged. No dependency was added and no proxy test was introduced.
 
 ### 1. Universal Git authority
 

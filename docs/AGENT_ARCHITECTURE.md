@@ -9,7 +9,7 @@ below exists to preserve two properties that made the pre-orchestrator workflow 
 2. **Product decisions escalate to the human.** Process decisions do not.
 
 The orchestrator runs the cycle with two human gates: spec approval before any code exists, and
-merge approval on high-risk changes only. Everything between is unattended. The two properties
+merge approval for every diff. Everything between is unattended. The two properties
 above are what keep that safe. Neither is negotiable — remove either and the structure becomes a
 fluent way to produce work nobody chose.
 
@@ -80,8 +80,10 @@ would have been caught here, before an implementer wasted a cycle.
 
 ### `implementer`
 
-Code work against one task spec. Writes to `src/`, `tests/`, `migrations/`, `config/`. One task
-per agent, one branch per agent, git worktree for isolation.
+Implements one approved task spec. Its task-scoped write authority covers only the paths explicitly
+listed in that task's approved **Files expected to change** section; the task file and
+`PROGRESS.md` must be listed when they will be edited. One task per agent, one branch per agent,
+git worktree for isolation. A path outside the approved list requires a task amendment or blocker.
 
 Inherits every rule in `AGENTS.md` — golden fixtures, no silent exception swallowing, blocker
 protocol, no threshold widening.
@@ -102,9 +104,13 @@ absorbed.
 
 Holds its own `mcp_servers` block with web access. The other agents stay code-only.
 
-Does source audits, back-tests, dossier assembly. Writes only to `docs/research/`. **Cannot
+Does external web research, source audits, back-tests, dossier assembly, and fetching external
+artifacts. Writes only to `docs/research/`. **Cannot
 write to `src/`, `tests/` or `migrations/`** — research must never silently become
 implementation.
+
+Ordinary documentation editing, repository terminology sweeps, and policy changes use the normal
+spec/implement/review roles and do not dispatch the researcher.
 
 This agent is how fixtures get fetched. Codex's default sandbox cannot reach `birac.nic.in`;
 this one can, and it commits fetched artifacts for implementers to work from locally.
@@ -164,14 +170,14 @@ STAGE 2  implementer                                  [worktree, own branch]
          product blocker? ────────────────────────────────► ESCALATE
    ↓
 STAGE 3  reviewer — given only task path + branch              [read-only]
-         two reviewers if schema / migration / ADR / threshold
+         two reviewers for canonical high-risk diffs
          reviewers disagree? ─────────────────────────────► ESCALATE
    ↓
 STAGE 4  orchestrator adjudicates + 13 quality gates
          gates fail twice? ───────────────────────────────► ESCALATE
    ↓
-STAGE 5  high-risk paths? ──► GATE 2, human approves merge
-         otherwise ─────────► merge autonomously
+STAGE 5  GATE 2 — human approves every merge
+         push only with separate explicit authorization
    ↓
 ONE REPORT
 ```
@@ -186,9 +192,6 @@ the failure mode is approving an assumption without noticing it was made.
 Hence the `## Interpretations` section, required in every spec, recording what was ambiguous,
 what was chosen, and what the alternative would have produced. "None; the request was
 unambiguous" is a valid entry. The heading is never omitted.
-
-*(`docs/tasks/README.md` does not yet list this as a required section. Amending the convention
-is a small outstanding task.)*
 
 ### Stage 0 still matters, but is no longer the sole guard
 
@@ -214,17 +217,28 @@ this project: fixtures edited instead of code, thresholds widened, applied migra
 ADRs left contradicted, JSON in a VARCHAR, exceptions swallowed, proxy tests presented as
 coverage.
 
-### Dual review and Gate 2 share one trigger list
+### Dual review and Gate 2
 
-`src/core/models.py`, anything under `migrations/`, `src/connectors/base.py`, the orchestrator,
-an ADR amendment, or any threshold or weight.
+Ordinary documentation-only work gets one independent reviewer. The canonical list below selects
+diffs that get two reviewers with independent context; **disagreement on any criterion is a hard
+blocker**.
 
-Those changes get two reviewers with independent context, and **disagreement is a hard
-blocker**. They also stop at Gate 2 for merge approval. Same list, same reason: they propagate,
-and unwinding them costs more than a human reading one report.
+<!-- CANONICAL HIGH-RISK LIST START -->
+A diff requires two independent reviewers if it:
 
-Everything else merges autonomously. Corrections are fix-forward, so an ordinary change on main
-is cheap to fix and expensive to sit on.
+- changes `src/core/models.py`;
+- changes any file under `migrations/`;
+- changes `src/connectors/base.py`;
+- changes `.codex/agents/orchestrator.toml`;
+- changes `docs/AGENT_ARCHITECTURE.md`;
+- amends `docs/DECISIONS.md`; or
+- changes any numerical threshold, confidence value, or scoring weight in any path.
+<!-- CANONICAL HIGH-RISK LIST END -->
+
+Every reviewed diff then stops at Gate 2 for explicit human merge approval in the current
+session. Every push of `main` or a named branch requires explicit user authorization in the
+current session. Neither permission implies the other unless both are explicitly granted
+together. A pull request is optional.
 
 ### Iteration limits
 
@@ -244,7 +258,7 @@ Prompting an agent not to write somewhere is not isolation. Enforce it.
 | orchestrator | workspace-write | `PROGRESS.md` only |
 | spec-writer | workspace-write | `docs/tasks/` |
 | spec-auditor | **read-only** | none |
-| implementer | workspace-write | `src/`, `tests/`, `migrations/`, `config/`, own task file |
+| implementer | workspace-write | approved **Files expected to change** paths only |
 | reviewer | **read-only** | none |
 | researcher | workspace-write | `docs/research/` |
 

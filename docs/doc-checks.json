@@ -1,0 +1,52 @@
+{
+  "minimum_task_number": 18,
+  "markdown_paths": [
+    "AGENTS.md",
+    "PRD.md",
+    "PROGRESS.md",
+    "docs"
+  ],
+  "high_risk_list": {
+    "owner_path": "docs/tasks/README.md",
+    "mirror_paths": [
+      "AGENTS.md",
+      "docs/AGENT_ARCHITECTURE.md",
+      ".codex/agents/orchestrator.toml"
+    ],
+    "start_marker": "<!-- CANONICAL HIGH-RISK LIST START -->",
+    "end_marker": "<!-- CANONICAL HIGH-RISK LIST END -->"
+  },
+  "retired_phrases": [
+    {
+      "phrase": "Everything else merges autonomously.",
+      "paths": [
+        "AGENTS.md",
+        "docs/tasks/README.md",
+        "docs/AGENT_ARCHITECTURE.md",
+        ".codex/agents/orchestrator.toml"
+      ]
+    },
+    {
+      "phrase": "Pushing is not optional",
+      "paths": [
+        "docs/tasks/README.md",
+        ".codex/agents/implementer.toml",
+        ".codex/agents/orchestrator.toml"
+      ]
+    },
+    {
+      "phrase": "Parts of PRD.md still describe a product that predicts funding events",
+      "paths": [
+        ".codex/agents/orchestrator.toml",
+        ".codex/agents/spec-writer.toml"
+      ]
+    },
+    {
+      "phrase": "Documentation-only tasks merge under the existing merge policy",
+      "paths": [
+        ".codex/agents/implementer.toml",
+        ".codex/agents/orchestrator.toml"
+      ]
+    }
+  ]
+}

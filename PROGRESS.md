@@ -1036,3 +1036,92 @@ Newest entries at the bottom.
 **Decisions promoted to docs/DECISIONS.md**
 - ADR-016 amended in place: readiness scoring is retired because the curve was unsupported and
   because funding-event prediction is not the product's job.
+
+---
+
+## 2026-09-11 â€” task 018 documentation fast lane
+
+**Branch / commits:** `task/018-documentation-fast-lane`, this commit
+**Prompt used:** `docs/tasks/018-documentation-fast-lane.md`
+
+**Changed**
+- Replaced selective/autonomous Git policy with separate universal merge and push gates: every
+  merge needs explicit human approval, every push needs explicit user authorization in the current
+  session, and neither permission implies the other unless both are granted together.
+- Made `docs/tasks/README.md` the owner of one canonical seven-item high-risk list and mirrored it
+  verbatim in `AGENTS.md`, `docs/AGENT_ARCHITECTURE.md`, and the orchestrator contract.
+- Added Task-018-onward documentation impact declarations, pre-Gate-1 cross-document sweeps,
+  durable chat amendments, consolidated synonym passes, expected-file-scoped implementer writes,
+  one-reviewer ordinary documentation routing, and reusable final verification evidence.
+- Restricted researcher dispatch to external web research, source audits, back-tests, dossier
+  assembly, and fetching external artifacts; ordinary repository documentation stays in the
+  normal spec/implement/review cycle.
+- Added the dependency-free `scripts/check_docs.py`, bounded `docs/doc-checks.json`, and eight
+  behavioral CLI tests using temporary fixture repositories. The checker explicitly does not
+  infer semantic classification, judge prose consistency, or ban unconfigured historical terms.
+- Deleted the resolved `Interpretations` mismatch from `docs/CONTEXT.md`.
+
+**Acceptance criteria**
+1. **Met:** all four live policy owners state universal, separate merge/push authorization gates.
+2. **Met:** task branches are universal; only a task-file-only local blocker commit may use
+   `main`, and both agent contracts require asking before its push and reporting pending visibility.
+3. **Met:** `uv run python scripts/check_docs.py` proves all three marked mirrors equal the README
+   owner block.
+4. **Met:** ordinary docs get one reviewer; canonical high-risk diffs get two; disagreement blocks;
+   every reviewed diff stops for human merge approval. This task changes two named high-risk paths.
+5. **Met:** architecture, convention, and implementer contract limit writes to the approved
+   **Files expected to change** list; Task 018 retains its bounded bootstrap paragraph.
+6. **Met:** `Interpretations` is required immediately after `Intent`; the three stale mismatch
+   references are gone while current CONTEXT section 3 intake remains.
+7. **Met:** the convention defines all three impact classes and the semantic sweep; spec-writer and
+   spec-auditor contracts respectively perform and audit it.
+8. **Met:** the convention and orchestrator require dated durable amendments and one consolidated
+   terminology resweep, allow only mechanical wording substitutions, and block product choices.
+9. **Met:** the owner and implementer/reviewer/orchestrator contracts contain timing, exact evidence,
+   reuse, four rerun triggers, the evidence-only exception, and the non-documentation exclusion.
+10. **Met:** AGENTS, architecture, orchestrator, and researcher contracts exclude ordinary docs and
+    name all five external researcher uses; current research state now comes from `PROGRESS.md`.
+11. **Met:** the configured contradiction search exited 1 with no matches; the orchestrator has no
+    live automatic-merge outcome.
+12. **Met:** the checker imports only Python standard-library modules, uses bounded JSON config, and
+    exits 0 with exactly `Documentation checks passed.`
+13. **Met:** `tests/test_doc_checks.py` behaviorally covers valid fixtures; missing and out-of-order
+    sections; missing semantic metadata; missing paths/fragments; mirror drift; and path-scoped
+    retired phrases. Every failure assertion checks path and reason.
+14. **Met:** checker and convention document their semantic limits; `pyproject.toml` and `uv.lock`
+    are unchanged.
+15. **Met:** all three post-edit searches and every remaining hit disposition are recorded in the
+    task; the contradiction search is empty and current-state migration remains delegated to 020.
+16. **Met:** final canonical verification passed after the final substantive change. Task 018 is
+    ineligible for the future documentation-only shortcut because it adds executable tooling/tests.
+17. **Met:** this entry records criterion evidence, command results, file accounting, and unfinished
+    work; the task status is `complete`.
+
+**Verification**
+- `uv run python scripts/check_docs.py` â€” exit 0; `Documentation checks passed.`
+- `uv run pytest` â€” exit 0; 125 tests collected, `125 passed in 18.02s`.
+- `uv run ruff check .` â€” exit 0; `All checks passed!`
+- Pytest and Ruff ran after the final substantive change and cover that diff. The later task/status
+  and PROGRESS edits record only evidence, so they do not invalidate the run. No rerun trigger
+  occurred.
+- Focused test-first evidence: before the checker existed, all eight new tests failed because the
+  script path was absent; after implementation, `8 passed in 3.99s`.
+- JSON and every `.codex/agents/*.toml` file parsed with Python's standard library.
+
+**Behavioural/proxy disclosure**
+- The eight checker tests invoke the real CLI against temporary repository trees and assert its
+  observable output and exit status. They are behavioral tests, not proxies.
+
+**Files outside the expected list**
+- None.
+
+**Unfinished**
+- Independent dual review, quality-gate adjudication, human merge approval, and push authorization
+  remain. Task 020 owns current-state consolidation; Task 021 owns Task 009 closure. Neither was
+  implemented here.
+
+**Assumptions I had to make because the spec didn't say**
+- None.
+
+**Decisions promoted to docs/DECISIONS.md**
+- None.

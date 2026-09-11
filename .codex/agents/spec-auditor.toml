@@ -42,6 +42,14 @@ Report on each of these, with specific line references:
 8. STALE CONTEXT. Does the spec rely on anything listed as stale in docs/CONTEXT.md section 3?
    A criterion built on superseded PRD language is a FAIL, however well written.
 
+9. DOCUMENTATION IMPACT. For Task 018 onward, review whether `none`, `structural`, or `semantic`
+   is the correct classification; do not delegate that judgement to tooling. Fail a structural
+   task without affected paths. Fail a semantic task unless it declares terms and known synonyms,
+   included or excluded-with-reason dispositions for `PRD.md`, `docs/DECISIONS.md`, the
+   current-state block of `PROGRESS.md`, `docs/CONTEXT.md`, and its own task file, additional
+   dependents, and every pre-Gate-1 hit. A
+   grouped disposition is complete only if it enumerates every grouped file and line.
+
 Verdict: PASS, or PASS WITH NOTES, or FAIL with the specific criteria at fault.
 
 Do not be agreeable. A spec that passes audit and then blocks in implementation is a failure of
